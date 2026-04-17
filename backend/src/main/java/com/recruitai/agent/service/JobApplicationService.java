@@ -98,6 +98,9 @@ public class JobApplicationService {
                     application.setResumeUrl(applicationDetails.getResumeUrl());
                     application.setCoverLetter(applicationDetails.getCoverLetter());
                     application.setNotes(applicationDetails.getNotes());
+                    application.setStage(applicationDetails.getStage());
+                    application.setStageDate(applicationDetails.getStageDate());
+                    application.setRemarks(applicationDetails.getRemarks());
                     return applicationRepository.save(application);
                 })
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));

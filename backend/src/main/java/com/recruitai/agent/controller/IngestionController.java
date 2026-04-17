@@ -22,28 +22,28 @@ public class IngestionController {
     public ResponseEntity<Candidate> ingestFromNaukri(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "jobId", required = false) String jobId) throws IOException {
         logger.info("Ingesting resume from Naukri: {}", file.getOriginalFilename());
-        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, "Naukri", jobId));
+        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, "Naukri", jobId, null));
     }
 
     @PostMapping("/linkedin")
     public ResponseEntity<Candidate> ingestFromLinkedIn(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "jobId", required = false) String jobId) throws IOException {
         logger.info("Ingesting resume from LinkedIn: {}", file.getOriginalFilename());
-        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, "LinkedIn", jobId));
+        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, "LinkedIn", jobId, null));
     }
 
     @PostMapping("/website")
     public ResponseEntity<Candidate> ingestFromWebsite(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "jobId", required = false) String jobId) throws IOException {
         logger.info("Ingesting resume from Website: {}", file.getOriginalFilename());
-        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, "Website", jobId));
+        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, "Website", jobId, null));
     }
 
     @PostMapping("/email")
     public ResponseEntity<Candidate> ingestFromEmail(@RequestParam("file") MultipartFile file,
             @RequestParam(value = "jobId", required = false) String jobId) throws IOException {
         logger.info("Ingesting resume from Email: {}", file.getOriginalFilename());
-        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, "Email", jobId));
+        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, "Email", jobId, null));
     }
 
     @PostMapping("/generic")
@@ -51,6 +51,6 @@ public class IngestionController {
             @RequestParam("source") String source,
             @RequestParam(value = "jobId", required = false) String jobId) throws IOException {
         logger.info("Ingesting resume from {}: {}", source, file.getOriginalFilename());
-        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, source, jobId));
+        return ResponseEntity.ok(resumeService.uploadAndParseResume(file, source, jobId, null));
     }
 }

@@ -91,6 +91,16 @@ public class GeminiAgentService {
 
                 8. **education**: List of degrees/institutions.
 
+                9. **visa_type**: The candidate's current visa status (e.g., 'Work Visa', 'Student Visa', 'Spouse Visa').
+
+                10. **visa_validity**: The expiration date or validity period of the visa if mentioned.
+
+                11. **reason_for_change**: The reason why the candidate is looking for a new job, if mentioned (e.g., 'Career Growth', 'Relocation').
+
+                12. **recently_applied_companies**: Any companies the candidate recently applied to, if mentioned.
+
+                13. **summary**: A 2-3 sentence professional summary of the candidate's career.
+
                 **MATCHING RULES**:
                 1. Compare extracted skills against the provided Job Definitions.
                 2. **MANDATORY**: A candidate MUST possess at least 40%% of the required skills for a job to be considered a match.
@@ -117,7 +127,12 @@ public class GeminiAgentService {
                           "total_experience_years": float,
                           "job_titles": ["string"],
                           "current_role": "string or null",
-                          "education": ["string"]
+                          "education": ["string"],
+                          "visa_type": "string or null",
+                          "visa_validity": "string or null",
+                          "reason_for_change": "string or null",
+                          "recently_applied_companies": "string or null",
+                          "summary": "string or null"
                         }
                         """;
 
@@ -457,5 +472,81 @@ public class GeminiAgentService {
             }
         }
         return "{}";
+    }
+
+    public String generateFormattedCv(String candidateName, String resumeText, byte[] resumeData, String mimeType) {
+        String prompt = """
+                You are an expert Resume Re-writer and Executive Branding Consultant.
+                Your task is to take the provided resume data and transform it into a HIGH-CONVERSION, PROFESSIONALLY FORMATTED CV.
+
+                **BRANDING GUIDELINES**:
+                1. Use a clean, enterprise-standard layout.
+                2. Standardize section headers: SUMMARY, CORE COMPETENCIES, PROFESSIONAL EXPERIENCE, EDUCATION.
+                3. Rewrite bullet points to focus on ACHIEVEMENTS and IMPACT (using the STAR method: Situation, Task, Action, Result).
+                4. Ensure perfect grammar and high-impact action verbs.
+                5. Remove any personal photos, excessive colors, or distracting fonts from the text representation.
+                6. THE OUTPUT MUST BE IN VALID MARKDOWN.
+
+                Candidate Name: %s
+                Input Resume Content:
+                """
+                .formatted(candidateName) + (resumeText != null ? resumeText : "See attached document");
+
+        String response;
+        if (resumeData != null && resumeData.length > 0 && mimeType != null) {
+            response = getGeminiResponseWithMedia(prompt, resumeData, mimeType, 2, 3000);
+        } else {
+            response = getGeminiResponse(prompt, 2, 2000);
+        }
+
+        try {
+            JsonNode root = mapper.readTree(response);
+            if (root.has("candidates") && root.get("candidates").isArray()) {
+                JsonNode firstCandidate = root.get("candidates").get(0);
+                if (firstCandidate.has("content")) {
+                    return firstCandidate.at("/content/parts/0/text").asText();
+                }
+            }
+            return "Internal Error: Could not format CV.";
+        } catch (Exception e) {
+            logger.error("Failed to parse Gemini Formatted CV response", e);
+            return "Error formatting CV: " + e.getMessage();
+        }
+    }
+    public String generateCandidateReply(String candidateName, String candidateRole, String candidateSkills, String recruiterMessage) {
+        String prompt = """
+                You are a job candidate named %s. 
+                You are a %s with skills in %s.
+                
+                You just received the following message from a recruiter:
+                \"\"\"
+                %s
+                \"\"\"
+                
+                Your task is to craft a professional, enthusiastic, and contextual reply to this message. 
+                
+                **CONSTRAINTS**:
+                1. Keep the tone professional but human.
+                2. Address specific points mentioned in the recruiter's message.
+                3. Mention one of your relevant skills or experience if it fits.
+                4. End with a proactive closing (e.g., asking for a meeting, expressing interest).
+                5. Output ONLY the message text. NO markdown backticks, NO "Candidate: " prefix.
+                """.formatted(candidateName, candidateRole, candidateSkills, recruiterMessage);
+
+        String response = getGeminiResponse(prompt, 2, 2000);
+        
+        try {
+            JsonNode root = mapper.readTree(response);
+            if (root.has("candidates") && root.get("candidates").isArray()) {
+                JsonNode firstCandidate = root.get("candidates").get(0);
+                if (firstCandidate.has("content")) {
+                    return firstCandidate.at("/content/parts/0/text").asText().trim();
+                }
+            }
+            return cleanJsonResponse(response);
+        } catch (Exception e) {
+            logger.error("Failed to parse Gemini Candidate Reply response", e);
+            return "Hi there! Thank you for reaching out. I'm definitely interested in learning more about this opportunity.";
+        }
     }
 }

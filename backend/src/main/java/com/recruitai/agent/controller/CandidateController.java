@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/candidates")
 public class CandidateController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CandidateController.class);
+
     @Autowired
     private CandidateService candidateService;
 
@@ -33,12 +35,34 @@ public class CandidateController {
     @Autowired
     private com.recruitai.agent.service.EmailService emailService;
 
+    @Autowired
+    private com.recruitai.agent.ats.service.GeminiAgentService geminiService;
+
+    @Autowired
+    private com.recruitai.agent.service.InterviewService interviewService;
+
     // ---------------- CREATE ----------------
     @PostMapping
-    public ResponseEntity<CandidateDto> createCandidate(@Valid @RequestBody CandidateDto candidateDto) {
-        Candidate candidate = convertToEntity(candidateDto);
-        Candidate createdCandidate = candidateService.createCandidate(candidate);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(createdCandidate));
+    public ResponseEntity<?> createCandidate(@Valid @RequestBody CandidateDto candidateDto,
+            org.springframework.validation.BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.toList());
+            log.error("Validation failed for candidate creation: {}", errors);
+            return ResponseEntity.badRequest().body(Map.of("message", "Validation failed", "errors", errors));
+        }
+
+        log.debug("Received request to create candidate: {}", candidateDto.getName());
+        try {
+            Candidate candidate = convertToEntity(candidateDto);
+            Candidate createdCandidate = candidateService.createCandidate(candidate);
+            return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(createdCandidate));
+        } catch (Exception e) {
+            log.error("Error creating candidate: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error creating candidate", "error", e.getMessage()));
+        }
     }
 
     // ---------------- GET BY ID ----------------
@@ -133,12 +157,18 @@ public class CandidateController {
     public ResponseEntity<CandidateDto> assignJob(
             @PathVariable String id,
             @RequestParam String jobId,
-            @RequestParam String role) {
+            @RequestParam String role,
+            @RequestParam(required = false) String jobAssignedBy) {
 
         Candidate candidate = candidateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidate not found"));
         candidate.setJobId(jobId);
-        candidate.setRole(role);
+        // candidate.setRole(role); // STOP overwriting original role
+        candidate.setAssignedTo(role); // Use assignedTo for the job title
+        if (jobAssignedBy != null) {
+            candidate.setJobAssignedBy(jobAssignedBy);
+            candidate.setAssignedBy(jobAssignedBy); // Use assignedBy for the assigner name per requirement
+        }
         candidate.setUpdatedAt(LocalDateTime.now());
         Candidate updatedCandidate = candidateRepository.save(candidate);
 
@@ -185,6 +215,28 @@ public class CandidateController {
         return ResponseEntity.ok(java.util.Map.of("message", "Offer letter sent to " + candidate.getEmail()));
     }
 
+    @PostMapping("/{id}/request-update")
+    public ResponseEntity<java.util.Map<String, String>> requestProfileUpdate(@PathVariable String id) {
+        Candidate candidate = candidateRepository.findById(id).orElse(null);
+        if (candidate == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String subject = "Action Required: Update Your Profile - RecruitAI";
+        String body = "Dear " + candidate.getName() + ",\n\n" +
+                "We are currently reviewing your profile for several exciting opportunities at RecruitAI.\n\n" +
+                "To help us make the best match, could you please provide us with your most recent resume and update your professional details?\n\n"
+                +
+                "You can reply to this email with your updated CV or click the link below to update your profile on our portal.\n\n"
+                +
+                "Best Regards,\n" +
+                "RecruitAI Talent Acquisition Team";
+
+        emailService.sendSimpleMessage(candidate.getEmail(), subject, body);
+
+        return ResponseEntity.ok(java.util.Map.of("message", "Profile update request sent to " + candidate.getEmail()));
+    }
+
     @GetMapping("/statistics")
     public ResponseEntity<Map<String, Long>> getCandidateStatistics() {
 
@@ -228,6 +280,17 @@ public class CandidateController {
         } catch (Exception e) {
             stats.put("resumesToday", 0L);
         }
+        
+        // Add Interview stats for Dashboard
+        try {
+            Map<String, Long> interviewStats = interviewService.getInterviewStatistics();
+            stats.put("upcomingInterviews", interviewStats.getOrDefault("upcoming", 0L));
+            stats.put("completedInterviews", interviewStats.getOrDefault("completed", 0L));
+            stats.put("cancelledInterviews", interviewStats.getOrDefault("cancelled", 0L));
+            stats.put("rescheduledInterviews", interviewStats.getOrDefault("rescheduled", 0L));
+        } catch (Exception e) {
+            log.error("Error fetching interview stats for dashboard: {}", e.getMessage());
+        }
 
         return ResponseEntity.ok(stats);
     }
@@ -241,6 +304,7 @@ public class CandidateController {
     private Candidate convertToEntity(CandidateDto dto) {
         Candidate candidate = new Candidate();
         candidate.setId(dto.getId());
+        candidate.setSequenceId(dto.getSequenceId());
         candidate.setName(dto.getName());
         candidate.setEmail(dto.getEmail());
         candidate.setRole(dto.getRole());
@@ -261,12 +325,40 @@ public class CandidateController {
         candidate.setInterviewMeetingLink(dto.getInterviewMeetingLink());
         candidate.setInterviewRound(dto.getInterviewRound());
         candidate.setRoundStatus(dto.getRoundStatus());
+        candidate.setEducation(dto.getEducation());
+        candidate.setIndustry(dto.getIndustry());
+        candidate.setMatchReason(dto.getMatchReason());
+        candidate.setCurrentOrganization(dto.getCurrentOrganization());
+        candidate.setNoticePeriod(dto.getNoticePeriod());
+        candidate.setPostalCode(dto.getPostalCode());
+        candidate.setCurrentEmploymentStatus(dto.getCurrentEmploymentStatus());
+        candidate.setLanguageSkills(dto.getLanguageSkills());
+        candidate.setCurrentSalary(dto.getCurrentSalary());
+        candidate.setSalaryExpectation(dto.getSalaryExpectation());
+        candidate.setRelevantExperience(dto.getRelevantExperience());
+        candidate.setCountry(dto.getCountry());
+        candidate.setAvailableFrom(dto.getAvailableFrom());
+        candidate.setSalaryType(dto.getSalaryType());
+        candidate.setLocality(dto.getLocality());
+        candidate.setWillingToRelocate(dto.isWillingToRelocate());
+        candidate.setSummary(dto.getSummary());
+        candidate.setHotlist(dto.getHotlist());
+        candidate.setAssignedBy(dto.getAssignedBy());
+        candidate.setJobAssignedBy(dto.getJobAssignedBy());
+        candidate.setAssignedTo(dto.getAssignedTo());
+        candidate.setUploadedBy(dto.getUploadedBy());
+        candidate.setJapaneseLanguageProficiency(dto.getJapaneseLanguageProficiency());
+        candidate.setVisaType(dto.getVisaType());
+        candidate.setVisaValidity(dto.getVisaValidity());
+        candidate.setReasonForChange(dto.getReasonForChange());
+        candidate.setRecentlyAppliedCompanies(dto.getRecentlyAppliedCompanies());
         return candidate;
     }
 
     private CandidateDto convertToDto(Candidate candidate) {
         CandidateDto dto = new CandidateDto();
         dto.setId(candidate.getId());
+        dto.setSequenceId(candidate.getSequenceId());
         dto.setName(candidate.getName());
         dto.setEmail(candidate.getEmail());
         dto.setRole(candidate.getRole());
@@ -289,6 +381,33 @@ public class CandidateController {
         dto.setInterviewMeetingLink(candidate.getInterviewMeetingLink());
         dto.setInterviewRound(candidate.getInterviewRound());
         dto.setRoundStatus(candidate.getRoundStatus());
+        dto.setMatchReason(candidate.getMatchReason());
+
+        dto.setCurrentOrganization(candidate.getCurrentOrganization());
+        dto.setNoticePeriod(candidate.getNoticePeriod());
+        dto.setPostalCode(candidate.getPostalCode());
+        dto.setCurrentEmploymentStatus(candidate.getCurrentEmploymentStatus());
+        dto.setLanguageSkills(candidate.getLanguageSkills());
+        dto.setCurrentSalary(candidate.getCurrentSalary());
+        dto.setSalaryExpectation(candidate.getSalaryExpectation());
+        dto.setRelevantExperience(candidate.getRelevantExperience());
+        dto.setCountry(candidate.getCountry());
+        dto.setAvailableFrom(candidate.getAvailableFrom());
+        dto.setSalaryType(candidate.getSalaryType());
+        dto.setLocality(candidate.getLocality());
+        dto.setWillingToRelocate(candidate.isWillingToRelocate());
+        dto.setSummary(candidate.getSummary());
+        dto.setHotlist(candidate.getHotlist());
+        dto.setAssignedBy(candidate.getAssignedBy());
+        dto.setJobAssignedBy(candidate.getJobAssignedBy());
+        dto.setAssignedTo(candidate.getAssignedTo());
+        dto.setUploadedBy(candidate.getUploadedBy());
+        dto.setJapaneseLanguageProficiency(candidate.getJapaneseLanguageProficiency());
+        dto.setVisaType(candidate.getVisaType());
+        dto.setVisaValidity(candidate.getVisaValidity());
+        dto.setReasonForChange(candidate.getReasonForChange());
+        dto.setRecentlyAppliedCompanies(candidate.getRecentlyAppliedCompanies());
+
         // Map createdAt to appliedDate
         if (candidate.getCreatedAt() != null) {
             dto.setAppliedDate(candidate.getCreatedAt().toLocalDate().toString());
@@ -303,5 +422,22 @@ public class CandidateController {
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
+    }
+
+    @PostMapping("/{id}/generate-linkedin-reply")
+    public ResponseEntity<Map<String, String>> generateLinkedInReply(@PathVariable String id, @RequestBody Map<String, String> body) {
+        Candidate candidate = candidateRepository.findById(id).orElseThrow(() -> new RuntimeException("Candidate not found"));
+        String recruiterMsg = body.get("message");
+        
+        String candidateSkills = candidate.getSkills() != null ? String.join(", ", candidate.getSkills()) : "Not available";
+        
+        String reply = geminiService.generateCandidateReply(
+            candidate.getName(), 
+            candidate.getRole(), 
+            candidateSkills, 
+            recruiterMsg
+        );
+        
+        return ResponseEntity.ok(Map.of("reply", reply));
     }
 }

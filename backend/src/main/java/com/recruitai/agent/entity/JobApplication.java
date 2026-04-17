@@ -43,6 +43,16 @@ public class JobApplication {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
+    @Field("stage")
+    private String stage;
+
+    @Field("stage_date")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime stageDate;
+
+    @Field("remarks")
+    private String remarks;
+
     public enum ApplicationStatus {
         PENDING,
         UNDER_REVIEW,
@@ -149,5 +159,29 @@ public class JobApplication {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getStage() {
+        return stage;
+    }
+
+    public void setStage(String stage) {
+        this.stage = stage;
+    }
+
+    public LocalDateTime getStageDate() {
+        return stageDate;
+    }
+
+    public void setStageDate(LocalDateTime stageDate) {
+        this.stageDate = stageDate;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
     }
 }

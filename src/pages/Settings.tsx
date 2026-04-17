@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../api';
-import { User, Bell, Building, Shield, Save, Slack, Linkedin, Mail, Check, X, Upload } from 'lucide-react';
+import { User, Bell, Building, Shield, Save, Slack, Linkedin, Mail, Check, X, Upload, Settings as SettingsIcon } from 'lucide-react';
 
 interface SettingsProps {
   searchQuery?: string;
@@ -10,7 +10,7 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
   const [activeTab, setActiveTab] = useState('profile');
 
   const [profileData, setProfileData] = useState({
-    firstName: '',
+    firstName: 'Aparna',
     lastName: '',
     email: '',
     profilePic: '',
@@ -25,7 +25,7 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
       // Split name into first and last for the form
       const nameParts = (user.name || '').split(' ');
       setProfileData({
-        firstName: nameParts[0] || '',
+        firstName: nameParts[0] || 'Aparna',
         lastName: nameParts.slice(1).join(' ') || '',
         email: user.email || '',
         profilePic: user.profilePicture || '',
@@ -115,20 +115,31 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
-        <p className="text-sm text-gray-500">Manage your account settings and preferences.</p>
+    <div className="max-w-5xl mx-auto space-y-4 animate-in fade-in duration-700">
+      {/* Premium Header Container */}
+      {/* Premium Header Container */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-blue-50 shadow-sm transition-all duration-300">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-600 rounded-lg text-white shadow-md shadow-blue-100/50">
+            <SettingsIcon size={18} />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+              <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest leading-none">System Control</span>
+            </div>
+            <h2 className="text-xl font-black text-gray-900 tracking-tight leading-none">Settings</h2>
+          </div>
+        </div>
       </div>
 
       {showSearchResults}
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar Tabs */}
-        <aside className="lg:w-64 flex-shrink-0">
-          <nav className="space-y-1">
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Sidebar Tabs with Premium Active State */}
+        <aside className="lg:w-44 flex-shrink-0">
+          <nav className="flex lg:flex-col gap-1 p-1 bg-white rounded-xl border border-blue-50 shadow-sm sticky top-4">
             {filteredTabs.length === 0 && searchQuery ? (
-              <div className="text-center text-gray-500 text-sm py-4">No matching sections</div>
+              <div className="text-center text-gray-400 text-[10px] font-black uppercase py-4">No results</div>
             ) : (
               filteredTabs.map((tab) => {
                 const isActive = activeTab === tab.id;
@@ -136,13 +147,14 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${isActive
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-black rounded-lg transition-all duration-300
+                      ${isActive
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
+                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                       }`}
                   >
-                    <tab.icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-400'}`} />
-                    {highlightText(tab.label)}
+                    <tab.icon size={14} />
+                    <span className="uppercase tracking-widest leading-none">{highlightText(tab.label)}</span>
                   </button>
                 );
               }))}
@@ -153,59 +165,26 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
         <div className="flex-1">
           {/* PROFILE TAB */}
           {activeTab === 'profile' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-blue-50 p-4 space-y-5">
               <div>
-                <h3 className="text-lg font-medium text-gray-900">Personal Information</h3>
-                <p className="text-sm text-gray-500">Update your photo and personal details.</p>
+                <h3 className="text-sm font-black text-gray-900 tracking-tight uppercase">Profile Information</h3>
+                <p className="text-[10px] text-gray-400 font-bold">Update your personal details and photo.</p>
               </div>
 
-              <div className="flex items-center gap-6 pb-6 border-b border-gray-200">
+              <div className="flex items-center gap-4 pb-4 border-b border-gray-50">
                 {profileData.profilePic ? (
-                  <img className="h-20 w-20 rounded-full object-cover border-2 border-indigo-100 shadow-sm" src={profileData.profilePic} alt="Profile" />
+                  <img className="h-12 w-12 rounded-lg object-cover border border-blue-100 shadow-sm" src={profileData.profilePic} alt="Profile" />
                 ) : (
-                  <div className="h-20 w-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg border-2 border-white ring-2 ring-indigo-50">
-                    {profileData.email ? profileData.email.charAt(0).toUpperCase() : 'U'}
+                  <div className="h-12 w-12 rounded-lg bg-blue-600 flex items-center justify-center text-white text-base font-black shadow-sm">
+                    {profileData.firstName ? profileData.firstName.charAt(0).toUpperCase() : 'A'}
                   </div>
                 )}
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <button
                     onClick={() => profilePicInputRef.current?.click()}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-widest hover:bg-slate-100 transition"
                   >
-                    Change
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (!profileData.email) return;
-                      if (confirm('Are you sure you want to remove your profile picture?')) {
-                        setIsSaving(true);
-                        try {
-                          const response = await api.delete(`/users/profile-picture?email=${profileData.email}`);
-                          if (response.status === 200) {
-                            setProfileData(prev => ({ ...prev, profilePic: '' }));
-
-                            // Update local storage to sync header
-                            const userData = localStorage.getItem('user');
-                            if (userData) {
-                              const user = JSON.parse(userData);
-                              const updatedUser = { ...user, profilePicture: null };
-                              localStorage.setItem('user', JSON.stringify(updatedUser));
-                              window.dispatchEvent(new Event('storage'));
-                            }
-                            alert('Profile picture removed!');
-                          }
-                        } catch (error) {
-                          console.error('Failed to remove profile picture', error);
-                          alert('Failed to remove profile picture.');
-                        } finally {
-                          setIsSaving(false);
-                        }
-                      }
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
-                    disabled={isSaving || !profileData.profilePic}
-                  >
-                    Remove
+                    Upload
                   </button>
                 </div>
                 <input
@@ -218,7 +197,7 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
                     if (!file || !profileData.email) return;
 
                     if (file.size > 2 * 1024 * 1024) {
-                      alert('File size too large. Please select an image under 2MB.');
+                      alert('Max 2MB');
                       return;
                     }
 
@@ -234,8 +213,6 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
 
                       if (response.data) {
                         setProfileData(prev => ({ ...prev, profilePic: response.data.profilePicture }));
-
-                        // Update local storage
                         const userData = localStorage.getItem('user');
                         if (userData) {
                           const user = JSON.parse(userData);
@@ -243,11 +220,9 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
                           localStorage.setItem('user', JSON.stringify(updatedUser));
                           window.dispatchEvent(new Event('storage'));
                         }
-                        alert('Profile picture updated!');
                       }
                     } catch (error) {
-                      console.error('Failed to upload picture', error);
-                      alert('Failed to update profile picture.');
+                      console.error('Upload failed', error);
                     } finally {
                       setIsSaving(false);
                     }
@@ -255,36 +230,37 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">First Name</label>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">First Name</label>
                   <input
                     type="text"
                     value={profileData.firstName}
                     onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
-                    className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[11px] font-bold focus:ring-1 focus:ring-blue-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Name</label>
                   <input
                     type="text"
                     value={profileData.lastName}
                     onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
-                    className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[11px] font-bold focus:ring-1 focus:ring-blue-500 outline-none"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Email Address</label>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Email Address</label>
                   <input
                     type="email"
                     value={profileData.email}
                     onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                    className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[11px] font-bold focus:ring-1 focus:ring-blue-500 outline-none"
                   />
                 </div>
               </div>
               <div className="flex justify-end pt-4">
+              <div className="flex justify-end pt-2">
                 <button
                   disabled={isSaving}
                   onClick={async () => {
@@ -297,98 +273,89 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
                       });
 
                       if (response.data) {
-                        // Update local storage
                         const userData = localStorage.getItem('user');
                         if (userData) {
                           const user = JSON.parse(userData);
                           const updatedUser = { ...user, name: response.data.name };
                           localStorage.setItem('user', JSON.stringify(updatedUser));
-                          // Update state to trigger UI changes elsewhere (like Layout)
                           window.dispatchEvent(new Event('storage'));
                         }
-                        alert('Profile saved successfully!');
+                        alert('Saved!');
                       }
                     } catch (error) {
-                      console.error('Save profile error:', error);
-                      alert('Failed to save profile changes.');
+                      console.error('Save failed', error);
                     } finally {
                       setIsSaving(false);
                     }
                   }}
-                  className={`flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {isSaving ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : <Save className="w-4 h-4" />}
+                  <Save className="w-3.5 h-3.5" />
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
+              </div>
               </div>
             </div>
           )}
 
           {/* NOTIFICATIONS TAB */}
           {activeTab === 'notifications' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Notification Preferences</h3>
-              <div className="space-y-4">
-                <div className="flex items-start justify-between py-4 border-b border-gray-100">
+            <div className="bg-white rounded-xl shadow-sm border border-blue-50 p-4">
+              <div className="mb-4">
+                <h3 className="text-sm font-black text-gray-900 tracking-tight uppercase">Notification Preferences</h3>
+                <p className="text-[10px] text-gray-400 font-bold">Manage how you receive alerts.</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900">New Candidate Applications</h4>
-                    <p className="text-sm text-gray-500">Get notified when a candidate applies to your job.</p>
+                    <h4 className="text-[11px] font-black text-gray-700">Applications</h4>
+                    <p className="text-[9px] text-gray-400 font-bold">New candidate notifications.</p>
                   </div>
-                  <div className="flex items-center h-5">
-                    <input
-                      type="checkbox"
-                      checked={notificationPrefs.newApplications}
-                      onChange={(e) => setNotificationPrefs(prev => ({ ...prev, newApplications: e.target.checked }))}
-                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                    />
-                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notificationPrefs.newApplications}
+                    onChange={(e) => setNotificationPrefs(prev => ({ ...prev, newApplications: e.target.checked }))}
+                    className="w-3.5 h-3.5 text-blue-600 border-gray-200 rounded"
+                  />
                 </div>
-                <div className="flex items-start justify-between py-4 border-b border-gray-100">
+                <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900">Interview Reminders</h4>
-                    <p className="text-sm text-gray-500">Receive reminders 1 hour before scheduled interviews.</p>
+                    <h4 className="text-[11px] font-black text-gray-700">Reminders</h4>
+                    <p className="text-[9px] text-gray-400 font-bold">Interview alerts.</p>
                   </div>
-                  <div className="flex items-center h-5">
-                    <input
-                      type="checkbox"
-                      checked={notificationPrefs.interviewReminders}
-                      onChange={(e) => setNotificationPrefs(prev => ({ ...prev, interviewReminders: e.target.checked }))}
-                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                    />
-                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notificationPrefs.interviewReminders}
+                    onChange={(e) => setNotificationPrefs(prev => ({ ...prev, interviewReminders: e.target.checked }))}
+                    className="w-3.5 h-3.5 text-blue-600 border-gray-200 rounded"
+                  />
                 </div>
-                <div className="flex items-start justify-between py-4 border-b border-gray-100">
+                <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900">Weekly Reports</h4>
-                    <p className="text-sm text-gray-500">Summary of recruitment activity every Monday.</p>
+                    <h4 className="text-[11px] font-black text-gray-700">Reports</h4>
+                    <p className="text-[9px] text-gray-400 font-bold">Weekly activity summaries.</p>
                   </div>
-                  <div className="flex items-center h-5">
-                    <input
-                      type="checkbox"
-                      checked={notificationPrefs.weeklyReports}
-                      onChange={(e) => setNotificationPrefs(prev => ({ ...prev, weeklyReports: e.target.checked }))}
-                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                    />
-                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notificationPrefs.weeklyReports}
+                    onChange={(e) => setNotificationPrefs(prev => ({ ...prev, weeklyReports: e.target.checked }))}
+                    className="w-3.5 h-3.5 text-blue-600 border-gray-200 rounded"
+                  />
                 </div>
-                <div className="flex items-start justify-between py-4 border-b border-gray-100 last:border-0">
+                <div className="flex items-center justify-between py-2">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900">Team Mentions</h4>
-                    <p className="text-sm text-gray-500">Notify when team members mention you in notes.</p>
+                    <h4 className="text-[11px] font-black text-gray-700">Mentions</h4>
+                    <p className="text-[9px] text-gray-400 font-bold">Team tag alerts.</p>
                   </div>
-                  <div className="flex items-center h-5">
-                    <input
-                      type="checkbox"
-                      checked={notificationPrefs.teamMentions}
-                      onChange={(e) => setNotificationPrefs(prev => ({ ...prev, teamMentions: e.target.checked }))}
-                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                    />
-                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notificationPrefs.teamMentions}
+                    onChange={(e) => setNotificationPrefs(prev => ({ ...prev, teamMentions: e.target.checked }))}
+                    className="w-3.5 h-3.5 text-blue-600 border-gray-200 rounded"
+                  />
                 </div>
               </div>
-              <div className="mt-6 flex justify-end">
+              <div className="mt-4 flex justify-end">
                 <button
                   disabled={isSavingNotifications}
                   onClick={async () => {
@@ -397,7 +364,6 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
                     try {
                       const response = await api.put(`/users/notification-preferences?email=${profileData.email}`, notificationPrefs);
                       if (response.data) {
-                        // Update local storage
                         const userData = localStorage.getItem('user');
                         if (userData) {
                           const user = JSON.parse(userData);
@@ -405,20 +371,17 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
                           localStorage.setItem('user', JSON.stringify(updatedUser));
                           window.dispatchEvent(new Event('storage'));
                         }
-                        alert('Notification preferences saved successfully!');
+                        alert('Saved!');
                       }
                     } catch (error) {
-                      console.error('Failed to save notification preferences', error);
-                      alert('Failed to save notification preferences.');
+                      console.error('Save failed', error);
                     } finally {
                       setIsSavingNotifications(false);
                     }
                   }}
-                  className={`flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 ${isSavingNotifications ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition ${isSavingNotifications ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {isSavingNotifications ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : <Save className="w-4 h-4" />}
+                  <Save className="w-3.5 h-3.5" />
                   {isSavingNotifications ? 'Saving...' : 'Save Preferences'}
                 </button>
               </div>
@@ -427,240 +390,159 @@ const Settings: React.FC<SettingsProps> = ({ searchQuery = '' }) => {
 
           {/* INTEGRATIONS TAB */}
           {activeTab === 'integrations' && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-                    <Linkedin className="w-8 h-8" />
+            <div className="space-y-3">
+              <div className="bg-white rounded-xl shadow-sm border border-blue-50 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                    <Linkedin className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-medium text-gray-900">LinkedIn Recruiter</h4>
-                    <p className="text-sm text-gray-500">Sync candidates and messages directly.</p>
+                    <h4 className="text-[11px] font-black text-gray-900 uppercase">LinkedIn</h4>
+                    <p className="text-[9px] text-gray-400 font-bold">Sync candidates.</p>
                   </div>
                 </div>
-                {integrations.linkedin ? (
-                  <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to disconnect LinkedIn Recruiter?')) {
-                        setIntegrations(prev => ({ ...prev, linkedin: false }));
-                        alert('LinkedIn Recruiter disconnected successfully.');
-                      }
-                    }}
-                    className="px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium flex items-center gap-2"
-                  >
-                    <Check className="w-4 h-4" /> Connected <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      // In a real app, this would open LinkedIn OAuth flow
-                      alert('Redirecting to LinkedIn for authentication...\n\nIn a real application, this would open LinkedIn OAuth.');
-                      setIntegrations(prev => ({ ...prev, linkedin: true }));
-                    }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Connect
-                  </button>
-                )}
+                <button className="px-3 py-1.5 border border-slate-100 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50">Connect</button>
               </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-purple-50 rounded-lg text-purple-600">
-                    <Slack className="w-8 h-8" />
+              <div className="bg-white rounded-xl shadow-sm border border-blue-50 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
+                    <Slack className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-medium text-gray-900">Slack</h4>
-                    <p className="text-sm text-gray-500">Receive notifications in your team channel.</p>
+                    <h4 className="text-[11px] font-black text-gray-900 uppercase">Slack</h4>
+                    <p className="text-[9px] text-gray-400 font-bold">Team alerts.</p>
                   </div>
                 </div>
-                {integrations.slack ? (
-                  <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to disconnect Slack?')) {
-                        setIntegrations(prev => ({ ...prev, slack: false }));
-                        alert('Slack disconnected successfully.');
-                      }
-                    }}
-                    className="px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium flex items-center gap-2"
-                  >
-                    <Check className="w-4 h-4" /> Connected <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      // In a real app, this would open Slack OAuth flow
-                      alert('Redirecting to Slack for authentication...\n\nIn a real application, this would open Slack OAuth.');
-                      setIntegrations(prev => ({ ...prev, slack: true }));
-                    }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Connect
-                  </button>
-                )}
+                <button className="px-3 py-1.5 bg-green-50 text-green-600 border border-green-100 rounded-lg text-[9px] font-black uppercase tracking-widest">Connected</button>
               </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-red-50 rounded-lg text-red-600">
-                    <Mail className="w-8 h-8" />
+              <div className="bg-white rounded-xl shadow-sm border border-blue-50 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-50 rounded-lg text-red-600">
+                    <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-medium text-gray-900">Gmail</h4>
-                    <p className="text-sm text-gray-500">Sync emails and calendar invites.</p>
+                    <h4 className="text-[11px] font-black text-gray-900 uppercase">Gmail</h4>
+                    <p className="text-[9px] text-gray-400 font-bold">Sync emails.</p>
                   </div>
                 </div>
-                {integrations.gmail ? (
-                  <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to disconnect Gmail?')) {
-                        setIntegrations(prev => ({ ...prev, gmail: false }));
-                        alert('Gmail disconnected successfully.');
-                      }
-                    }}
-                    className="px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-medium flex items-center gap-2"
-                  >
-                    <Check className="w-4 h-4" /> Connected <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      // In a real app, this would open Gmail OAuth flow
-                      alert('Redirecting to Gmail for authentication...\n\nIn a real application, this would open Gmail OAuth.');
-                      setIntegrations(prev => ({ ...prev, gmail: true }));
-                    }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Connect
-                  </button>
-                )}
+                <button className="px-3 py-1.5 border border-slate-100 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50">Connect</button>
               </div>
             </div>
           )}
 
           {/* COMPANY TAB */}
           {activeTab === 'company' && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Company Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Company Logo</label>
-                    <div className="mt-2 flex items-center gap-4">
-                      {companyData.logo ? (
-                        <img src={companyData.logo} alt="Company Logo" className="h-16 w-16 rounded-lg object-contain bg-white p-1 border border-gray-200" />
-                      ) : (
-                        <div className="h-16 w-16 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400">
-                          <Building className="w-8 h-8" />
-                        </div>
-                      )}
-                      <button
-                        onClick={() => companyLogoInputRef.current?.click()}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                      >
-                        <Upload className="w-4 h-4" /> Upload New
-                      </button>
-                      <input
-                        ref={companyLogoInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            if (file.size > 5 * 1024 * 1024) {
-                              alert('File size must be less than 5MB');
-                              return;
-                            }
-                            if (!file.type.startsWith('image/')) {
-                              alert('Please select an image file');
-                              return;
-                            }
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setCompanyData(prev => ({ ...prev, logo: reader.result as string }));
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                      <span className="text-xs text-gray-400">Recommended size: 256x256px (PNG, JPG)</span>
-                    </div>
-                  </div>
-                  <div className="col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Company Name</label>
-                    <input
-                      type="text"
-                      value={companyData.name}
-                      onChange={(e) => setCompanyData(prev => ({ ...prev, name: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Website</label>
-                    <input
-                      type="text"
-                      value={companyData.website}
-                      onChange={(e) => setCompanyData(prev => ({ ...prev, website: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea
-                      rows={3}
-                      value={companyData.description}
-                      onChange={(e) => setCompanyData(prev => ({ ...prev, description: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Headquarters</label>
-                    <input
-                      type="text"
-                      value={companyData.headquarters}
-                      onChange={(e) => setCompanyData(prev => ({ ...prev, headquarters: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Company Size</label>
-                    <select
-                      value={companyData.size}
-                      onChange={(e) => setCompanyData(prev => ({ ...prev, size: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+            <div className="bg-white rounded-xl shadow-sm border border-blue-50 p-4 space-y-5">
+              <div>
+                <h3 className="text-sm font-black text-gray-900 tracking-tight uppercase">Company Details</h3>
+                <p className="text-[10px] text-gray-400 font-bold">Manage organization settings.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Logo</label>
+                  <div className="flex items-center gap-3">
+                    {companyData.logo ? (
+                      <img src={companyData.logo} alt="Logo" className="h-10 w-10 rounded-lg object-contain border border-gray-200 p-1" />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-center text-gray-300">
+                        <Building size={16} />
+                      </div>
+                    )}
+                    <button
+                      onClick={() => companyLogoInputRef.current?.click()}
+                      className="px-3 py-1.5 border border-slate-100 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition"
                     >
-                      <option>1-50 employees</option>
-                      <option>51-200 employees</option>
-                      <option>201-500 employees</option>
-                      <option>500+ employees</option>
-                    </select>
+                      Update Logo
+                    </button>
+                    <input
+                      ref={companyLogoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setCompanyData(prev => ({ ...prev, logo: reader.result as string }));
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
                   </div>
                 </div>
-                <div className="mt-6 flex justify-end">
-                  <button
-                    disabled={isSavingCompany}
-                    onClick={async () => {
-                      setIsSavingCompany(true);
-                      try {
-                        const response = await api.put('/company', companyData);
-                        if (response.data) {
-                          setCompanyData(response.data);
-                          alert('Company details saved successfully!');
-                        }
-                      } catch (error) {
-                        console.error('Failed to save company data', error);
-                        alert('Failed to save company details.');
-                      } finally {
-                        setIsSavingCompany(false);
-                      }
-                    }}
-                    className={`flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 ${isSavingCompany ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  >
-                    {isSavingCompany ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : <Save className="w-4 h-4" />}
-                    {isSavingCompany ? 'Saving...' : 'Save Details'}
-                  </button>
+                <div>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Company Name</label>
+                  <input
+                    type="text"
+                    value={companyData.name}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[11px] font-bold focus:ring-1 focus:ring-blue-500 outline-none"
+                  />
                 </div>
+                <div>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Website</label>
+                  <input
+                    type="text"
+                    value={companyData.website}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, website: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[11px] font-bold focus:ring-1 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Description</label>
+                  <textarea
+                    rows={2}
+                    value={companyData.description}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[11px] font-bold focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Headquarters</label>
+                  <input
+                    type="text"
+                    value={companyData.headquarters}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, headquarters: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[11px] font-bold focus:ring-1 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Size</label>
+                  <select
+                    value={companyData.size}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, size: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[11px] font-bold focus:ring-1 focus:ring-blue-500 outline-none"
+                  >
+                    <option>1-50 employees</option>
+                    <option>51-200 employees</option>
+                    <option>201-500 employees</option>
+                    <option>500+ employees</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end pt-2">
+                <button
+                  disabled={isSavingCompany}
+                  onClick={async () => {
+                    setIsSavingCompany(true);
+                    try {
+                      const response = await api.put('/company', companyData);
+                      if (response.data) {
+                        setCompanyData(response.data);
+                        alert('Saved!');
+                      }
+                    } catch (error) {
+                      console.error('Save failed', error);
+                    } finally {
+                      setIsSavingCompany(false);
+                    }
+                  }}
+                  className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition ${isSavingCompany ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  {isSavingCompany ? 'Saving...' : 'Save Details'}
+                </button>
               </div>
             </div>
           )}

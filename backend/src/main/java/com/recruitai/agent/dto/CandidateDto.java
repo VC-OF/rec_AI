@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 public class CandidateDto {
 
     private String id;
+    private Long sequenceId;
 
     @NotBlank(message = "Name is required")
     @Size(max = 100, message = "Name must not exceed 100 characters")
@@ -37,6 +38,214 @@ public class CandidateDto {
     private String jobId;
     private String interviewRound;
     private String roundStatus;
+    private String currentOrganization;
+    private Integer noticePeriod;
+    private String postalCode;
+    private String currentEmploymentStatus;
+    private java.util.List<String> languageSkills;
+    private String currentSalary;
+    private String salaryExpectation;
+    private Double relevantExperience;
+    private String country;
+    private String availableFrom;
+    private String salaryType;
+    private String locality;
+    private boolean willingToRelocate;
+    private String summary;
+    private String hotlist;
+    private String assignedBy;
+    private String jobAssignedBy;
+    private String assignedTo;
+    private String uploadedBy;
+    private String japaneseLanguageProficiency;
+    private String visaType;
+    private String visaValidity;
+    private String reasonForChange;
+    private String recentlyAppliedCompanies;
+
+    public String getVisaType() {
+        return visaType;
+    }
+
+    public void setVisaType(String visaType) {
+        this.visaType = visaType;
+    }
+
+    public String getVisaValidity() {
+        return visaValidity;
+    }
+
+    public void setVisaValidity(String visaValidity) {
+        this.visaValidity = visaValidity;
+    }
+
+    public String getReasonForChange() {
+        return reasonForChange;
+    }
+
+    public void setReasonForChange(String reasonForChange) {
+        this.reasonForChange = reasonForChange;
+    }
+
+    public String getRecentlyAppliedCompanies() {
+        return recentlyAppliedCompanies;
+    }
+
+    public void setRecentlyAppliedCompanies(String recentlyAppliedCompanies) {
+        this.recentlyAppliedCompanies = recentlyAppliedCompanies;
+    }
+
+    public String getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public String getUploadedBy() {
+        return uploadedBy;
+    }
+
+    public void setUploadedBy(String uploadedBy) {
+        this.uploadedBy = uploadedBy;
+    }
+
+    public String getCurrentOrganization() {
+        return currentOrganization;
+    }
+
+    public void setCurrentOrganization(String currentOrganization) {
+        this.currentOrganization = currentOrganization;
+    }
+
+    public Integer getNoticePeriod() {
+        return noticePeriod;
+    }
+
+    public void setNoticePeriod(Integer noticePeriod) {
+        this.noticePeriod = noticePeriod;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    public String getCurrentEmploymentStatus() {
+        return currentEmploymentStatus;
+    }
+
+    public void setCurrentEmploymentStatus(String currentEmploymentStatus) {
+        this.currentEmploymentStatus = currentEmploymentStatus;
+    }
+
+    public java.util.List<String> getLanguageSkills() {
+        return languageSkills;
+    }
+
+    public void setLanguageSkills(java.util.List<String> languageSkills) {
+        this.languageSkills = languageSkills;
+    }
+
+    public String getCurrentSalary() {
+        return currentSalary;
+    }
+
+    public void setCurrentSalary(String currentSalary) {
+        this.currentSalary = currentSalary;
+    }
+
+    public String getSalaryExpectation() {
+        return salaryExpectation;
+    }
+
+    public void setSalaryExpectation(String salaryExpectation) {
+        this.salaryExpectation = salaryExpectation;
+    }
+
+    public Double getRelevantExperience() {
+        return relevantExperience;
+    }
+
+    public void setRelevantExperience(Double relevantExperience) {
+        this.relevantExperience = relevantExperience;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getAvailableFrom() {
+        return availableFrom;
+    }
+
+    public void setAvailableFrom(String availableFrom) {
+        this.availableFrom = availableFrom;
+    }
+
+    public String getSalaryType() {
+        return salaryType;
+    }
+
+    public void setSalaryType(String salaryType) {
+        this.salaryType = salaryType;
+    }
+
+    public String getLocality() {
+        return locality;
+    }
+
+    public void setLocality(String locality) {
+        this.locality = locality;
+    }
+
+    public boolean isWillingToRelocate() {
+        return willingToRelocate;
+    }
+
+    public void setWillingToRelocate(boolean willingToRelocate) {
+        this.willingToRelocate = willingToRelocate;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getHotlist() {
+        return hotlist;
+    }
+
+    public void setHotlist(String hotlist) {
+        this.hotlist = hotlist;
+    }
+
+    public String getAssignedBy() {
+        return assignedBy;
+    }
+
+    public void setAssignedBy(String assignedBy) {
+        this.assignedBy = assignedBy;
+    }
+
+    public String getJobAssignedBy() {
+        return jobAssignedBy;
+    }
+
+    public void setJobAssignedBy(String jobAssignedBy) {
+        this.jobAssignedBy = jobAssignedBy;
+    }
 
     // Constructors
     public CandidateDto() {
@@ -95,6 +304,14 @@ public class CandidateDto {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Long getSequenceId() {
+        return sequenceId;
+    }
+
+    public void setSequenceId(Long sequenceId) {
+        this.sequenceId = sequenceId;
     }
 
     public String getName() {
@@ -239,5 +456,23 @@ public class CandidateDto {
 
     public void setRoundStatus(String roundStatus) {
         this.roundStatus = roundStatus;
+    }
+
+    private String matchReason;
+
+    public String getMatchReason() {
+        return matchReason;
+    }
+
+    public void setMatchReason(String matchReason) {
+        this.matchReason = matchReason;
+    }
+
+    public String getJapaneseLanguageProficiency() {
+        return japaneseLanguageProficiency;
+    }
+
+    public void setJapaneseLanguageProficiency(String japaneseLanguageProficiency) {
+        this.japaneseLanguageProficiency = japaneseLanguageProficiency;
     }
 }

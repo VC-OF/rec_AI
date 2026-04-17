@@ -12,6 +12,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Document(collection = "candidates")
 public class Candidate {
+    
+    @Field("sequence_id")
+    private Long sequenceId;
 
     @Id
     private String id;
@@ -106,6 +109,262 @@ public class Candidate {
 
     @Field("round_status")
     private String roundStatus; // "Scheduled", "Feedback Pending", "Passed", "Rejected"
+
+    @Field("current_organization")
+    private String currentOrganization;
+
+    @Field("notice_period")
+    private Integer noticePeriod;
+
+    @Field("postal_code")
+    private String postalCode;
+
+    @Field("current_employment_status")
+    private String currentEmploymentStatus;
+
+    @Field("language_skills")
+    private List<String> languageSkills;
+
+    @Field("current_salary")
+    private String currentSalary;
+
+    @Field("salary_expectation")
+    private String salaryExpectation;
+
+    @Field("relevant_experience")
+    private Double relevantExperience;
+
+    @Field("country")
+    private String country;
+
+    @Field("available_from")
+    private String availableFrom;
+
+    @Field("salary_type")
+    private String salaryType;
+
+    @Field("locality")
+    private String locality;
+
+    @Field("willing_to_relocate")
+    private boolean willingToRelocate;
+
+    @Field("summary")
+    private String summary;
+
+    @Field("hotlist")
+    private String hotlist;
+
+    @Field("assigned_by")
+    private String assignedBy;
+
+    @Field("job_assigned_by")
+    private String jobAssignedBy;
+
+    @Field("assigned_to")
+    private String assignedTo;
+
+    @Field("uploaded_by")
+    private String uploadedBy;
+
+    @Field("japanese_language_proficiency")
+    private String japaneseLanguageProficiency;
+
+    @Field("visa_type")
+    private String visaType;
+
+    @Field("visa_validity")
+    private String visaValidity;
+
+    @Field("reason_for_change")
+    private String reasonForChange;
+
+    @Field("recently_applied_companies")
+    private String recentlyAppliedCompanies;
+
+    public String getVisaType() {
+        return visaType;
+    }
+
+    public void setVisaType(String visaType) {
+        this.visaType = visaType;
+    }
+
+    public String getVisaValidity() {
+        return visaValidity;
+    }
+
+    public void setVisaValidity(String visaValidity) {
+        this.visaValidity = visaValidity;
+    }
+
+    public String getReasonForChange() {
+        return reasonForChange;
+    }
+
+    public void setReasonForChange(String reasonForChange) {
+        this.reasonForChange = reasonForChange;
+    }
+
+    public String getRecentlyAppliedCompanies() {
+        return recentlyAppliedCompanies;
+    }
+
+    public void setRecentlyAppliedCompanies(String recentlyAppliedCompanies) {
+        this.recentlyAppliedCompanies = recentlyAppliedCompanies;
+    }
+
+    public String getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public String getUploadedBy() {
+        return uploadedBy;
+    }
+
+    public void setUploadedBy(String uploadedBy) {
+        this.uploadedBy = uploadedBy;
+    }
+
+    public String getCurrentOrganization() {
+        return currentOrganization;
+    }
+
+    public void setCurrentOrganization(String currentOrganization) {
+        this.currentOrganization = currentOrganization;
+    }
+
+    public Integer getNoticePeriod() {
+        return noticePeriod;
+    }
+
+    public void setNoticePeriod(Integer noticePeriod) {
+        this.noticePeriod = noticePeriod;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    public String getCurrentEmploymentStatus() {
+        return currentEmploymentStatus;
+    }
+
+    public void setCurrentEmploymentStatus(String currentEmploymentStatus) {
+        this.currentEmploymentStatus = currentEmploymentStatus;
+    }
+
+    public List<String> getLanguageSkills() {
+        return languageSkills;
+    }
+
+    public void setLanguageSkills(List<String> languageSkills) {
+        this.languageSkills = languageSkills;
+    }
+
+    public String getCurrentSalary() {
+        return currentSalary;
+    }
+
+    public void setCurrentSalary(String currentSalary) {
+        this.currentSalary = currentSalary;
+    }
+
+    public String getSalaryExpectation() {
+        return salaryExpectation;
+    }
+
+    public void setSalaryExpectation(String salaryExpectation) {
+        this.salaryExpectation = salaryExpectation;
+    }
+
+    public Double getRelevantExperience() {
+        return relevantExperience;
+    }
+
+    public void setRelevantExperience(Double relevantExperience) {
+        this.relevantExperience = relevantExperience;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getAvailableFrom() {
+        return availableFrom;
+    }
+
+    public void setAvailableFrom(String availableFrom) {
+        this.availableFrom = availableFrom;
+    }
+
+    public String getSalaryType() {
+        return salaryType;
+    }
+
+    public void setSalaryType(String salaryType) {
+        this.salaryType = salaryType;
+    }
+
+    public String getLocality() {
+        return locality;
+    }
+
+    public void setLocality(String locality) {
+        this.locality = locality;
+    }
+
+    public boolean isWillingToRelocate() {
+        return willingToRelocate;
+    }
+
+    public void setWillingToRelocate(boolean willingToRelocate) {
+        this.willingToRelocate = willingToRelocate;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getHotlist() {
+        return hotlist;
+    }
+
+    public void setHotlist(String hotlist) {
+        this.hotlist = hotlist;
+    }
+
+    public String getAssignedBy() {
+        return assignedBy;
+    }
+
+    public void setAssignedBy(String assignedBy) {
+        this.assignedBy = assignedBy;
+    }
+
+    public String getJobAssignedBy() {
+        return jobAssignedBy;
+    }
+
+    public void setJobAssignedBy(String jobAssignedBy) {
+        this.jobAssignedBy = jobAssignedBy;
+    }
 
     // Getters and Setters
     public String getInterviewRound() {
@@ -338,5 +597,21 @@ public class Candidate {
 
     public void setInterviewNotes(String interviewNotes) {
         this.interviewNotes = interviewNotes;
+    }
+
+    public Long getSequenceId() {
+        return sequenceId;
+    }
+
+    public void setSequenceId(Long sequenceId) {
+        this.sequenceId = sequenceId;
+    }
+
+    public String getJapaneseLanguageProficiency() {
+        return japaneseLanguageProficiency;
+    }
+
+    public void setJapaneseLanguageProficiency(String japaneseLanguageProficiency) {
+        this.japaneseLanguageProficiency = japaneseLanguageProficiency;
     }
 }

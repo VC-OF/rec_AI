@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class CandidateService {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CandidateService.class);
 
     @Autowired
     private CandidateRepository candidateRepository;
@@ -34,15 +37,62 @@ public class CandidateService {
 
     @Autowired
     private com.recruitai.agent.repository.InterviewRepository interviewRepository;
+    
+    @PostConstruct
+    public void init() {
+        log.info("🔍 STARTING CANDIDATE ID BACKFILL CHECK...");
+        fixMissingSequenceIds();
+    }
+
+    public synchronized void fixMissingSequenceIds() {
+        log.info("📊 Fetching all candidates to check for missing or duplicate sequence IDs...");
+        List<Candidate> all = candidateRepository.findAll();
+        
+        java.util.Set<Long> seenIds = new java.util.HashSet<>();
+        List<Candidate> toFix = new java.util.ArrayList<>();
+        long maxId = 0;
+
+        for (Candidate c : all) {
+            Long sid = c.getSequenceId();
+            if (sid == null || seenIds.contains(sid)) {
+                toFix.add(c);
+            } else {
+                seenIds.add(sid);
+                if (sid > maxId) maxId = sid;
+            }
+        }
+            
+        log.info("📊 Total candidates: {}, Candidates to fix: {}", all.size(), toFix.size());
+        if (toFix.isEmpty()) return;
+
+        long nextId = maxId + 1;
+        
+        log.info("🔢 Starting re-assignment from ID: {}", nextId);
+
+        for (Candidate c : toFix) {
+            c.setSequenceId(nextId++);
+            candidateRepository.save(c);
+        }
+        log.info("✅ ID RESOLUTION COMPLETED. Total processed: {}", toFix.size());
+    }
 
     // ✅ CREATE (COLLECTION WILL BE CREATED HERE)
     public Candidate createCandidate(Candidate candidate) {
-        if (candidate.getJobId() != null
-                && candidateRepository.existsByEmailAndJobId(candidate.getEmail(), candidate.getJobId())) {
+        // STRICT DUPLICATE CHECK: Global Email Uniqueness
+        if (candidateRepository.existsByEmail(candidate.getEmail())) {
             throw new RuntimeException(
-                    "Candidate with email " + candidate.getEmail() + " has already applied for this job");
+                    "Candidate with email " + candidate.getEmail() + " already exists in the system.");
         }
         candidate.setCreatedAt(LocalDateTime.now());
+        
+        // Auto-increment sequenceId
+        long nextId = 1;
+        Optional<Candidate> top = candidateRepository.findTopByOrderBySequenceIdDesc();
+        if (top.isPresent() && top.get().getSequenceId() != null) {
+            nextId = top.get().getSequenceId() + 1;
+        }
+        candidate.setSequenceId(nextId);
+
         return candidateRepository.save(candidate);
     }
 
@@ -106,6 +156,31 @@ public class CandidateService {
                     candidate.setRejectionReason(candidateDetails.getRejectionReason());
                     candidate.setInterviewRound(candidateDetails.getInterviewRound());
                     candidate.setRoundStatus(candidateDetails.getRoundStatus());
+
+                    candidate.setCurrentOrganization(candidateDetails.getCurrentOrganization());
+                    candidate.setNoticePeriod(candidateDetails.getNoticePeriod());
+                    candidate.setPostalCode(candidateDetails.getPostalCode());
+                    candidate.setCurrentEmploymentStatus(candidateDetails.getCurrentEmploymentStatus());
+                    candidate.setLanguageSkills(candidateDetails.getLanguageSkills());
+                    candidate.setCurrentSalary(candidateDetails.getCurrentSalary());
+                    candidate.setSalaryExpectation(candidateDetails.getSalaryExpectation());
+                    candidate.setRelevantExperience(candidateDetails.getRelevantExperience());
+                    candidate.setCountry(candidateDetails.getCountry());
+                    candidate.setAvailableFrom(candidateDetails.getAvailableFrom());
+                    candidate.setSalaryType(candidateDetails.getSalaryType());
+                    candidate.setLocality(candidateDetails.getLocality());
+                    candidate.setWillingToRelocate(candidateDetails.isWillingToRelocate());
+                    candidate.setSummary(candidateDetails.getSummary());
+                    candidate.setHotlist(candidateDetails.getHotlist());
+                    candidate.setAssignedBy(candidateDetails.getAssignedBy());
+                    candidate.setAssignedTo(candidateDetails.getAssignedTo());
+                    candidate.setUploadedBy(candidateDetails.getUploadedBy());
+                    
+                    candidate.setJapaneseLanguageProficiency(candidateDetails.getJapaneseLanguageProficiency());
+                    candidate.setVisaType(candidateDetails.getVisaType());
+                    candidate.setVisaValidity(candidateDetails.getVisaValidity());
+                    candidate.setReasonForChange(candidateDetails.getReasonForChange());
+                    candidate.setRecentlyAppliedCompanies(candidateDetails.getRecentlyAppliedCompanies());
 
                     candidate.setUpdatedAt(LocalDateTime.now());
 

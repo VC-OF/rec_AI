@@ -1,9 +1,10 @@
 $backendPort = 8089
 $frontendPort = 3000
+$agentPort = 8090
 
 Write-Host "--- RECRUITAI SYSTEM CLEANUP & START ---" -ForegroundColor Cyan
 
-# 1. Kill everything on 8088 and 3000
+# 1. Kill everything on ports
 function Clear-Port ([int]$port) {
     Write-Host "Checking Port $port..."
     $processes = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
@@ -20,14 +21,18 @@ function Clear-Port ([int]$port) {
 
 Clear-Port $backendPort
 Clear-Port $frontendPort
+Clear-Port $agentPort
 
-# 2. Start Backend (Redirecting output to log file for debugging)
+# 2. Start LinkedIn Agent
+Write-Host "Starting Autonomous LinkedIn Agent on Port 8090..." -ForegroundColor Yellow
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd linkedin-agent; node index.js" -WindowStyle Normal
+
+# 3. Start Backend
 Write-Host "Starting Backend on Port 8088..." -ForegroundColor Cyan
 Set-Location -Path ".\backend"
-# Use cmd /c to handle redirection properly for the detached process
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "mvn spring-boot:run | Tee-Object -FilePath '..\backend_debug.log'" -WindowStyle Normal
 
-# 3. Start Frontend
+# 4. Start Frontend
 Set-Location -Path ".."
 Write-Host "Starting Frontend on Port 3000..." -ForegroundColor Cyan
 npm run dev

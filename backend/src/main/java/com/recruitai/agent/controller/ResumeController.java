@@ -18,9 +18,11 @@ public class ResumeController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadResume(@RequestParam("file") MultipartFile file,
-            @RequestParam(value = "source", defaultValue = "UPLOAD") String source) {
+            @RequestParam(value = "source", defaultValue = "UPLOAD") String source,
+            @RequestParam(value = "assignedBy", required = false) String assignedBy) {
         try {
-            Candidate candidate = resumeService.uploadAndParseResume(file, source);
+            System.out.println(">>> UPLOAD REQUEST: source=" + source + ", assignedBy=" + assignedBy);
+            Candidate candidate = resumeService.uploadAndParseResume(file, source, null, assignedBy);
             return ResponseEntity.ok(candidate);
         } catch (IOException e) {
             e.printStackTrace();
@@ -39,5 +41,25 @@ public class ResumeController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(resume);
+    }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity<byte[]> downloadResume(@PathVariable String id) {
+        Resume resume = resumeService.getResumeById(id);
+        if (resume == null || resume.getData() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + resume.getFileName() + "\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType(resume.getContentType()))
+                .body(resume.getData());
+    }
+
+    @GetMapping("/{id}/formatted")
+    public ResponseEntity<String> getFormattedCv(@PathVariable String id) {
+        String formatted = resumeService.generateFormattedCv(id);
+        return ResponseEntity.ok(formatted);
     }
 }

@@ -27,19 +27,19 @@ public interface JobApplicationRepository extends MongoRepository<JobApplication
 
     Page<JobApplication> findByStatus(ApplicationStatus status, Pageable pageable);
 
-    @Query("{ 'candidateId': ?0, 'status': ?1 }")
+    @Query("{ 'candidate_id': ?0, 'status': ?1 }")
     List<JobApplication> findByCandidateIdAndStatus(String candidateId, ApplicationStatus status);
 
-    @Query("{ 'jobId': ?0, 'status': ?1 }")
+    @Query("{ 'job_id': ?0, 'status': ?1 }")
     List<JobApplication> findByJobIdAndStatus(String jobId, ApplicationStatus status);
 
-    @Query(value = "{ 'jobId': ?0 }", count = true)
+    @Query(value = "{ 'job_id': ?0 }", count = true)
     long countByJobId(String jobId);
 
-    @Query(value = "{ 'jobId': ?0, 'status': ?1 }", count = true)
+    @Query(value = "{ 'job_id': ?0, 'status': ?1 }", count = true)
     long countByJobIdAndStatus(String jobId, ApplicationStatus status);
 
-    @Query(value = "{ 'candidateId': ?0 }", count = true)
+    @Query(value = "{ 'candidate_id': ?0 }", count = true)
     long countByCandidateId(String candidateId);
 
     @Query("{ 'applied_date': { '$gte': ?0 } }")

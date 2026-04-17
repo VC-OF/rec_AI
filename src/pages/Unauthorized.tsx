@@ -4,8 +4,8 @@ import { ShieldAlert } from 'lucide-react';
 
 const Unauthorized: React.FC = () => {
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+        <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center p-4">
+            <div className="bg-white p-12 rounded-[2.5rem] shadow-2xl border-2 border-blue-200/80 max-w-md w-full text-center animate-in zoom-in duration-300">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <ShieldAlert className="w-8 h-8 text-red-600" />
                 </div>
@@ -15,7 +15,7 @@ const Unauthorized: React.FC = () => {
                 </p>
                 <Link
                     to="/"
-                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                     Return to Dashboard
                 </Link>

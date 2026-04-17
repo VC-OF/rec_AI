@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileText, Download, Share2, Printer, CheckCircle, ExternalLink, Calendar, X, User, Briefcase, Clock, AlertCircle, Edit2 } from 'lucide-react';
 import api from '../api';
 
@@ -28,15 +29,15 @@ interface ShortlistReportProps {
 const ShortlistReport: React.FC<ShortlistReportProps> = ({ searchQuery = '' }) => {
   const [shortlistData, setShortlistData] = useState<Record<string, ShortlistedCandidate[]>>(mockShortlistData);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'candidates' | 'positions' | 'days'>('all');
-  const [showProfileModal, setShowProfileModal] = useState<{ candidate: ShortlistedCandidate | null }>({ candidate: null });
   const [recommendedFilter, setRecommendedFilter] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const fetchCandidates = async () => {
       try {
         const response = await api.get('/candidates?size=100');
-        const candidates = response.data.content;
+        const candidates = Array.isArray(response.data) ? response.data : (response.data?.content || []);
 
         const groupedByRole: Record<string, ShortlistedCandidate[]> = {};
 
@@ -58,10 +59,11 @@ const ShortlistReport: React.FC<ShortlistReportProps> = ({ searchQuery = '' }) =
             interviewType: c.interviewType
           };
 
-          if (!groupedByRole[formatted.role]) {
-            groupedByRole[formatted.role] = [];
+          const category = c.hotlist || c.role || 'Unassigned';
+          if (!groupedByRole[category]) {
+            groupedByRole[category] = [];
           }
-          groupedByRole[formatted.role].push(formatted);
+          groupedByRole[category].push(formatted);
         });
 
         setShortlistData(groupedByRole);
@@ -191,7 +193,7 @@ const ShortlistReport: React.FC<ShortlistReportProps> = ({ searchQuery = '' }) =
   };
 
   const handleViewFullProfile = (candidate: ShortlistedCandidate) => {
-    setShowProfileModal({ candidate });
+    navigate(`/candidates/${candidate.id}`);
   };
 
   const handleViewAssessment = async (candidate: ShortlistedCandidate) => {
@@ -295,263 +297,125 @@ const ShortlistReport: React.FC<ShortlistReportProps> = ({ searchQuery = '' }) =
   })();
 
   return (
-    <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Shortlist Report</h2>
-          <p className="text-sm text-gray-500">Generated on November 14, 2025 • Q4 Hiring Cycle</p>
+    <div className="space-y-4 animate-in fade-in duration-700">
+      {/* Premium Header Container */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-blue-50 shadow-sm transition-all">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-100/50">
+            <FileText size={16} />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+              <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest leading-none">Reporting Module</span>
+            </div>
+            <h2 className="text-lg font-black text-gray-900 tracking-tight leading-none">Shortlist Report</h2>
+            <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-wider leading-none">Generated on {new Date().toLocaleDateString()}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-          >
-            <Printer className="w-4 h-4" /> Print
+          <button onClick={handlePrint} className="p-2 bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-100 transition border border-slate-100">
+            <Printer size={14} />
           </button>
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-          >
-            <Share2 className="w-4 h-4" /> Share
-          </button>
-          <button
-            onClick={handleExportPDF}
-            className="flex items-center gap-2 bg-indigo-600 px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition"
-          >
-            <Download className="w-4 h-4" /> Export PDF
+          <button onClick={handleExportPDF} className="flex items-center gap-1.5 bg-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-black text-white hover:bg-blue-700 transition active:scale-95 uppercase tracking-widest leading-none">
+            <Download size={12} /> Export Report
           </button>
         </div>
       </div>
 
       {/* Executive Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <button
-          onClick={() => setSelectedFilter(selectedFilter === 'candidates' ? 'all' : 'candidates')}
-          className={`bg-white p-6 rounded-xl border shadow-sm transition-all hover:shadow-md ${selectedFilter === 'candidates' ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'
-            }`}
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-lg text-green-600">
-              <User className="w-6 h-6" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        {[
+          { id: 'candidates', label: 'Shortlisted', value: totalCandidates, icon: User, color: 'blue' },
+          { id: 'positions', label: 'Roles Covered', value: totalPositions, icon: Briefcase, color: 'emerald' },
+          { id: 'days', label: 'Avg Notice', value: `${avgNoticePeriod}D`, icon: Clock, color: 'rose' }
+        ].map((stat) => (
+          <button
+            key={stat.id}
+            onClick={() => setSelectedFilter(selectedFilter === stat.id ? 'all' : stat.id as any)}
+            className={`p-2.5 rounded-xl border transition-all hover:border-blue-200 text-left relative overflow-hidden group
+              ${selectedFilter === stat.id
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white border-blue-50 shadow-sm'
+              }`}
+          >
+            <div className="flex items-center gap-3 relative z-10">
+              <div className={`p-1.5 rounded-lg ${selectedFilter === stat.id ? 'bg-white/20 text-white' : 'bg-slate-50 text-gray-600'} group-hover:bg-white/30 transition-colors`}>
+                <stat.icon size={16} />
+              </div>
+              <div>
+                <p className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${selectedFilter === stat.id ? 'text-white/70' : 'text-gray-400'}`}>{stat.label}</p>
+                <h3 className={`text-base font-black leading-none ${selectedFilter === stat.id ? 'text-white' : 'text-gray-900'}`}>{stat.value}</h3>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Total Shortlisted</p>
-              <h3 className="text-2xl font-bold text-gray-900">{totalCandidates} Candidates</h3>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={() => setSelectedFilter(selectedFilter === 'positions' ? 'all' : 'positions')}
-          className={`bg-white p-6 rounded-xl border shadow-sm transition-all hover:shadow-md ${selectedFilter === 'positions' ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'
-            }`}
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg text-blue-600">
-              <Briefcase className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Roles Covered</p>
-              <h3 className="text-2xl font-bold text-gray-900">{totalPositions} Positions</h3>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={() => setSelectedFilter(selectedFilter === 'days' ? 'all' : 'days')}
-          className={`bg-white p-6 rounded-xl border shadow-sm transition-all hover:shadow-md ${selectedFilter === 'days' ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'
-            }`}
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg text-purple-600">
-              <Clock className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Avg. Notice Period</p>
-              <h3 className="text-2xl font-bold text-gray-900">{avgNoticePeriod} Days</h3>
-            </div>
-          </div>
-        </button>
+          </button>
+        ))}
       </div>
-
-      {/* Detailed Reports by Role */}
       {Object.entries(filteredData).map(([role, candidates]) => (
-        <div key={role} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <span className="w-2 h-6 bg-indigo-600 rounded-full"></span>
+        <div key={role} className="bg-white rounded-xl border border-blue-50 shadow-sm overflow-hidden mb-4">
+          <div className="px-4 py-2.5 bg-slate-50 border-b border-blue-50 flex justify-between items-center">
+            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1 h-3 bg-blue-600 rounded-full"></div>
               {role}
             </h3>
-            <button
-              onClick={() => {
-                setRecommendedFilter(recommendedFilter === role ? null : role);
-                alert(`Showing ${candidates.length} recommended candidates for ${role} position.`);
-              }}
-              className={`text-xs font-medium px-2 py-1 rounded-full transition ${recommendedFilter === role
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                }`}
-            >
-              {candidates.length} Recommended
-            </button>
+            <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-white border border-blue-100 text-blue-600 uppercase tracking-widest">
+              {candidates.length} Profiles
+            </span>
           </div>
 
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-blue-50">
             {candidates.map((candidate) => (
-              <div key={candidate.id} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex flex-col md:flex-row gap-6">
+              <div key={candidate.id} className="p-4 hover:bg-slate-50/50 transition-colors">
+                <div className="flex items-center gap-4">
                   {/* Candidate Profile */}
-                  <div className="flex-shrink-0 flex flex-col items-center text-center w-full md:w-48">
-                    <img src={candidate.avatar} alt={candidate.name} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm mb-3" />
-                    <h4 className="font-bold text-gray-900">{highlightText(candidate.name)}</h4>
-                    <p className="text-sm text-gray-500 mb-2">{highlightText(candidate.currentCompany)}</p>
-                    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${candidate.matchScore >= 75 ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                      }`}>
-                      {candidate.matchScore}% Match
+                  <div className="shrink-0 flex items-center gap-3 min-w-[180px]">
+                    <img src={candidate.avatar} alt={candidate.name} className="w-9 h-9 rounded-lg object-cover border border-slate-100" />
+                    <div className="min-w-0">
+                      <h4 className="text-[11px] font-black text-gray-900 truncate leading-none uppercase">{highlightText(candidate.name)}</h4>
+                      <p className="text-[9px] text-blue-500 font-bold mt-1 truncate leading-none">{highlightText(candidate.currentCompany)}</p>
                     </div>
                   </div>
 
-                  {/* Candidate Details */}
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                    <div>
-                      <h5 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Experience</h5>
-                      <p className="text-sm font-medium text-gray-900">{candidate.experience}</p>
+                  {/* Info Grid */}
+                  <div className="flex-1 flex items-center gap-8">
+                    <div className="min-w-[80px]">
+                      <h5 className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Experience</h5>
+                      <p className="text-[10px] font-bold text-gray-900 leading-none">{candidate.experience}</p>
                     </div>
-                    <div>
-                      <h5 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Notice Period</h5>
-                      <p className="text-sm font-medium text-gray-900">{candidate.noticePeriod}</p>
+                    <div className="min-w-[80px]">
+                      <h5 className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Notice</h5>
+                      <p className="text-[10px] font-bold text-gray-900 leading-none">{candidate.noticePeriod}</p>
                     </div>
-                    <div className="md:col-span-2">
-                      <h5 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Recruiter Notes</h5>
-                      <p className="text-sm text-gray-600 italic bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div className="flex-1">
+                      <p className="text-[10px] text-gray-500 italic bg-blue-50/30 px-2 py-1.5 rounded border border-blue-50/50 truncate max-w-[300px]">
                         {highlightText(`"${candidate.notes}"`)}
                       </p>
                     </div>
-
-                    <div className="md:col-span-2 pt-2 flex items-center gap-3">
-                      <button
-                        onClick={() => handleViewFullProfile(candidate)}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-                      >
-                        View Full Profile <ExternalLink className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleViewAssessment(candidate)}
-                        className="text-sm font-medium text-gray-500 hover:text-gray-700 flex items-center gap-1"
-                      >
-                        View Assessment
-                      </button>
-                      {candidate.meetingLink && (
-                        <a
-                          href={candidate.meetingLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium text-green-600 hover:text-green-800 flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded border border-green-100"
-                        >
-                          Join Zoom Meeting <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
                   </div>
 
-                  {/* Action */}
-                  {candidate.interviewStatus === 'Scheduled' ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        disabled
-                        className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 cursor-not-allowed flex items-center justify-center"
-                        title="Interview Scheduled"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEditInterview(candidate)}
-                        className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors flex items-center justify-center"
-                        title="Reschedule Interview"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleScheduleInterview(candidate)}
-                      className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center border border-indigo-200"
-                      title="Schedule Interview"
-                    >
-                      <Calendar className="w-4 h-4" />
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button onClick={() => handleViewFullProfile(candidate)} className="p-1.5 bg-white border border-slate-100 rounded-md text-slate-400 hover:text-blue-600 hover:border-blue-100 transition shadow-sm">
+                      <ExternalLink size={14} />
                     </button>
-                  )}
-                  <button
-                    onClick={() => handleRemove(role, candidate.id)}
-                    className="p-2 bg-white border border-gray-200 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors"
-                    title="Remove from Shortlist"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                    {candidate.interviewStatus === 'Scheduled' ? (
+                      <button onClick={() => handleEditInterview(candidate)} className="p-1.5 bg-emerald-50 text-emerald-600 rounded-md border border-emerald-100 transition shadow-sm">
+                        <CheckCircle size={14} />
+                      </button>
+                    ) : (
+                      <button onClick={() => handleScheduleInterview(candidate)} className="p-1.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100 hover:bg-white transition shadow-sm">
+                        <Calendar size={14} />
+                      </button>
+                    )}
+                    <button onClick={() => handleRemove(role, candidate.id)} className="p-1.5 bg-white border border-slate-100 text-slate-300 rounded-md hover:text-rose-500 hover:border-rose-100 transition shadow-sm">
+                      <X size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      ))
-      }
-
-      {/* View Full Profile Modal */}
-      {
-        showProfileModal.candidate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Candidate Profile</h3>
-                <button onClick={() => setShowProfileModal({ candidate: null })} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <div className="p-6">
-                <div className="flex flex-col items-center mb-6">
-                  <img src={showProfileModal.candidate.avatar} alt={showProfileModal.candidate.name} className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg mb-4" />
-                  <h4 className="text-2xl font-bold text-gray-900">{showProfileModal.candidate.name}</h4>
-                  <p className="text-gray-500">{showProfileModal.candidate.role}</p>
-                  <div className={`mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${showProfileModal.candidate.matchScore >= 75 ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                    }`}>
-                    {showProfileModal.candidate.matchScore}% Match
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <p className="text-sm text-gray-500">Experience</p>
-                    <p className="text-lg font-semibold text-gray-900">{showProfileModal.candidate.experience}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Current Company</p>
-                    <p className="text-lg font-semibold text-gray-900">{showProfileModal.candidate.currentCompany}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Notice Period</p>
-                    <p className="text-lg font-semibold text-gray-900">{showProfileModal.candidate.noticePeriod}</p>
-                  </div>
-                  {showProfileModal.candidate.meetingLink && (
-                    <div className="col-span-2">
-                      <p className="text-sm text-gray-500">Interview Meeting Link</p>
-                      <a
-                        href={showProfileModal.candidate.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-lg font-semibold text-indigo-600 hover:text-indigo-800 break-all"
-                      >
-                        {showProfileModal.candidate.meetingLink}
-                      </a>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-2">Recruiter Notes</p>
-                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100">{showProfileModal.candidate.notes}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
+      ))}
 
       {/* View Assessment Modal */}
       {

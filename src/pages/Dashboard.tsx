@@ -1,369 +1,344 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Users, Briefcase, FileText, CheckCircle, ArrowUpRight,
-  Calendar, Clock, XCircle, RotateCcw, Plus, Search
+  Users,
+  Briefcase,
+  Clock,
+  TrendingUp,
+  Calendar,
+  UserCheck,
+  Search,
+  Filter,
+  MoreVertical,
+  Bell,
+  ArrowUpRight,
+  ChevronRight,
+  LayoutDashboard
 } from 'lucide-react';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
-} from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import api from '../api';
-
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444']; // Indigo, Violet, Pink, Emerald, Amber, Red
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardStats {
-  openJobs: number;
-  totalCandidates: number;
-  interviewsToday: number;
+  total: number;
+  screening: number;
   shortlisted: number;
-  pipeline: {
-    screening: number;
-    interview: number;
-    offer: number;
-    hired: number;
-    rejected: number;
-  };
-  interviewOverview: {
-    today: number;
-    upcoming: number;
-    completed: number;
-    cancelled: number;
-    rescheduled: number;
-  };
+  interviews: number;
+  offer: number;
+  hired: number;
+  rejected: number;
+  upcomingInterviews: number;
+  completedInterviews: number;
+  cancelledInterviews: number;
+  rescheduledInterviews: number;
 }
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<'7days' | '30days'>('7days');
-
   const [stats, setStats] = useState<DashboardStats>({
-    openJobs: 0,
-    totalCandidates: 0,
-    interviewsToday: 0,
+    total: 0,
+    screening: 0,
     shortlisted: 0,
-    pipeline: { screening: 0, interview: 0, offer: 0, hired: 0, rejected: 0 },
-    interviewOverview: { today: 0, upcoming: 0, completed: 0, cancelled: 0, rescheduled: 0 }
+    interviews: 0,
+    offer: 0,
+    hired: 0,
+    rejected: 0,
+    upcomingInterviews: 0,
+    completedInterviews: 0,
+    cancelledInterviews: 0,
+    rescheduledInterviews: 0
   });
+  const [trends, setTrends] = useState<any[]>([]);
+  const [recentCandidates, setRecentCandidates] = useState<any[]>([]);
+  const [jobCount, setJobCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const fetchDashboardData = async () => {
+    try {
+      const [candStatsRes, trendsRes, jobsRes, recentCandRes] = await Promise.all([
+        api.get('/candidates/statistics'),
+        api.get('/candidates/trends?days=7'),
+        api.get('/jobs?size=100'),
+        api.get('/candidates?size=5&sort=createdAt,desc')
+      ]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+      // 1. Statistics
+      const rawStats = candStatsRes.data || {};
+      setStats({
+        total: (rawStats.total || 0) as number,
+        screening: (rawStats.screening || 0) as number,
+        shortlisted: (rawStats.shortlisted || 0) as number,
+        interviews: (rawStats.interview || 0) as number,
+        offer: (rawStats.offer || 0) as number,
+        hired: (rawStats.hired || 0) as number,
+        rejected: (rawStats.rejected || 0) as number,
+        upcomingInterviews: (rawStats.upcomingInterviews || 0) as number,
+        completedInterviews: (rawStats.completedInterviews || 0) as number,
+        cancelledInterviews: (rawStats.cancelledInterviews || 0) as number,
+        rescheduledInterviews: (rawStats.rescheduledInterviews || 0) as number,
+      });
 
-        // Parallel API calls
-        const [jobStats, candidateStats, interviewStats, trends, distStats, recent] = await Promise.all([
-          api.get('/jobs/statistics').catch(() => ({ data: { open: 0 } })),
-          api.get('/candidates/statistics').catch(() => ({ data: {} })),
-          api.get('/interviews/statistics').catch(() => ({ data: {} })),
-          api.get(`/candidates/trends?days=${timeRange === '7days' ? 7 : 30}`).catch(() => ({ data: {} })),
-          api.get('/jobs/distribution').catch(() => ({ data: {} })),
-          api.get('/candidates?page=0&size=5&sort=updatedAt,desc').catch(() => ({ data: { content: [] } }))
-        ]);
+      // 2. Active Jobs
+      const jobsData = jobsRes.data?.content || jobsRes.data || [];
+      const activeJobsCount = Array.isArray(jobsData) ? jobsData.length : 0;
+      setJobCount(activeJobsCount);
 
-        // Process Stats
-        setStats({
-          openJobs: jobStats.data.open || 0,
-          totalCandidates: candidateStats.data.total || 0,
-          interviewsToday: interviewStats.data.today || 0, // Using interview stats instead of candidate resumes today
-          shortlisted: candidateStats.data.shortlisted || 0,
-          pipeline: {
-            screening: candidateStats.data.screening || 0,
-            interview: candidateStats.data.interview || 0,
-            offer: candidateStats.data.offer || 0,
-            hired: candidateStats.data.hired || 0,
-            rejected: candidateStats.data.rejected || 0
-          },
-          interviewOverview: {
-            today: interviewStats.data.today || 0,
-            upcoming: interviewStats.data.upcoming || 0,
-            completed: interviewStats.data.completed || 0,
-            cancelled: interviewStats.data.cancelled || 0,
-            rescheduled: interviewStats.data.rescheduled || 0
-          }
-        });
+      // 2. Trends
+      const trendData = Object.entries((trendsRes.data || {}) as Record<string, number>)
+        .map(([date, count]) => ({
+          name: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+          fullDate: date,
+          candidates: count
+        }))
+        .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
 
-        // Process Trends
-        const formattedTrends = Object.entries(trends.data || {}).map(([dateStr, count]) => ({
-          name: new Date(dateStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
-          value: count,
-          fullDate: dateStr
-        })).sort((a: any, b: any) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
-        setChartData(formattedTrends);
+      setTrends(trendData);
 
-        // Process Pie Chart
-        const formattedPie = Object.entries(distStats.data || {}).map(([name, value]) => ({
-          name, value: Number(value)
-        })).sort((a, b) => b.value - a.value).slice(0, 5); // Top 5
-        setPieData(formattedPie);
+      // 3. Recent Candidates
+      const recentData = Array.isArray(recentCandRes.data) ? recentCandRes.data : (recentCandRes.data?.content || []);
+      setRecentCandidates(recentData);
 
-        // Process Recent Activity
-        setRecentActivity(recent.data.content || []);
-
-      } catch (error) {
-        console.error("Dashboard fetch error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [timeRange]);
-
-  const formatTimeAgo = (dateInput: string | number[]) => {
-    if (!dateInput) return 'Just now';
-    let date = Array.isArray(dateInput)
-      ? new Date(dateInput[0], (dateInput[1] || 1) - 1, dateInput[2], dateInput[3] || 0, dateInput[4] || 0)
-      : new Date(dateInput);
-
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
+    } catch (error) {
+      console.error("Dashboard Fetch Error", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back, Manager</h1>
-          <p className="text-gray-500 mt-1">Here's what's happening with your recruitment pipeline today.</p>
+  useEffect(() => {
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading Analytics...</p>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => navigate('/jobs')}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-          >
-            Create Requisition
-          </button>
-          <button
-            onClick={() => navigate('/resume-upload')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
-          >
-            <ArrowUpRight className="w-4 h-4" /> Upload Resumes
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 animate-in fade-in duration-700">
+
+      {/* Premium Header Container - Updated to Blue */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-blue-50 shadow-sm transition-all duration-300">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-600 rounded-lg text-white shadow-md shadow-blue-100/50">
+            <LayoutDashboard size={18} />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+              <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Analytics</span>
+            </div>
+            <h1 className="text-lg font-black text-gray-900 tracking-tight leading-none">Welcome back, Manager</h1>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => navigate('/jobs')} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-[11px] font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-100 active:scale-95 flex items-center gap-1.5">
+            Create Job <ArrowUpRight size={14} />
           </button>
         </div>
       </div>
 
-      {/* Top Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Main Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
         {[
-          { label: 'Open Jobs', value: stats.openJobs, icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-100' },
-          { label: 'Total Candidates', value: stats.totalCandidates, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-          { label: 'Interviews Today', value: stats.interviewsToday, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-100' },
-          { label: 'Shortlisted', value: stats.shortlisted, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100' },
+          { label: 'Candidates', value: stats.total, icon: Users, color: 'text-blue-600' },
+          { label: 'Active Jobs', value: jobCount, icon: Briefcase, color: 'text-emerald-600' },
+          { label: 'Interviews', value: stats.interviews, icon: Clock, color: 'text-indigo-600' },
+          { label: 'Hired', value: stats.hired, icon: TrendingUp, color: 'text-rose-600' }
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className={`p-3 rounded-lg ${stat.bg}`}>
-              <stat.icon className={`w-6 h-6 ${stat.color}`} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-              <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+          <div key={i} className="bg-white border border-blue-50 p-3 rounded-xl shadow-sm group hover:border-blue-200 transition-all">
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 ${stat.color} flex items-center justify-center bg-slate-50 rounded-lg`}>
+                <stat.icon size={16} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">{stat.label}</p>
+                <h3 className="text-lg font-black text-gray-900 leading-none">{stat.value}</h3>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Main Grid: Multi-layer structure */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 px-1">
 
-        {/* Left Column (2/3) */}
-        <div className="xl:col-span-2 space-y-6">
-
-          {/* Pipeline Overview */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Candidate Pipeline Overview</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+        {/* TOP ROW: Pipeline (8) & Overall Interview (4) */}
+        <div className="lg:col-span-8">
+          <div className="bg-white p-3 rounded-xl border border-blue-50 shadow-sm h-full flex flex-col">
+            <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Pipeline</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-1.5 flex-1">
               {[
-                { label: 'Screening', value: stats.pipeline.screening, color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500' },
-                { label: 'Interview', value: stats.pipeline.interview, color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500' },
-                { label: 'Offer', value: stats.pipeline.offer, color: 'bg-purple-100 text-purple-700', dot: 'bg-purple-500' },
-                { label: 'Hired', value: stats.pipeline.hired, color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
-                { label: 'Rejected', value: stats.pipeline.rejected, color: 'bg-red-100 text-red-700', dot: 'bg-red-500' },
-              ].map((stage, i) => (
-                <div key={i} className={`p-4 rounded-lg flex flex-col items-center justify-center text-center ${stage.color} bg-opacity-50`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-2 h-2 rounded-full ${stage.dot}`}></div>
-                    <span className="text-sm font-semibold">{stage.label}</span>
+                { label: 'Screening', value: stats.screening, color: 'text-amber-500', dot: 'bg-amber-400', bg: 'bg-amber-50/20' },
+                { label: 'Interview', value: stats.interviews, color: 'text-blue-600', dot: 'bg-blue-500', bg: 'bg-blue-50/20' },
+                { label: 'Offer', value: stats.offer, color: 'text-purple-600', dot: 'bg-purple-500', bg: 'bg-purple-50/20' },
+                { label: 'Hired', value: stats.hired, color: 'text-emerald-600', dot: 'bg-emerald-500', bg: 'bg-emerald-50/20' },
+                { label: 'Rejected', value: stats.rejected, color: 'text-red-600', dot: 'bg-red-500', bg: 'bg-red-50/20' }
+              ].map((step, i) => (
+                <div key={i} className={`${step.bg} p-2 rounded-lg flex flex-col items-center justify-center gap-0.5 border border-transparent hover:bg-white hover:border-blue-100 transition-all`}>
+                  <div className="flex items-center gap-1">
+                    <div className={`w-1 h-1 rounded-full ${step.dot}`}></div>
+                    <span className={`text-[8px] font-black uppercase tracking-tight ${step.color}`}>{step.label}</span>
                   </div>
-                  <span className="text-2xl font-bold">{stage.value}</span>
+                  <span className="text-lg font-black text-gray-900 leading-none">{step.value}</span>
                 </div>
               ))}
             </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Candidate Trends Chart */}
-            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-gray-900">Candidate Trends</h3>
-                <select
-                  className="text-sm border-gray-200 rounded-lg text-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value as any)}
-                >
-                  <option value="7days">Last 7 Days</option>
-                  <option value="30days">Last 30 Days</option>
-                </select>
-              </div>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorTrend)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Jobs by Department - Donut */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center justify-center relative">
-              <h3 className="text-lg font-bold text-gray-900 mb-2 w-full text-left">Jobs by Department</h3>
-              <div className="h-48 w-full relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {pieData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center Text */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-bold text-gray-900">{stats.openJobs}</span>
-                  <span className="text-xs text-gray-500 font-medium uppercase">Jobs</span>
-                </div>
-              </div>
-              <div className="w-full mt-4 space-y-2">
-                {pieData.slice(0, 3).map((entry, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                      <span className="text-gray-600 truncate max-w-[100px]">{entry.name}</span>
+        <div className="lg:col-span-4">
+          <div className="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex flex-col h-full">
+            <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Interviews</h3>
+            <div className="space-y-1 flex-1">
+              {[
+                { label: 'Upcoming', value: stats.upcomingInterviews, color: 'text-blue-600', bg: 'bg-blue-50', icon: Calendar },
+                { label: 'Completed', value: stats.completedInterviews, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: UserCheck },
+                { label: 'Cancelled', value: stats.cancelledInterviews, color: 'text-red-500', bg: 'bg-red-50', icon: Calendar },
+                { label: 'Rescheduled', value: stats.rescheduledInterviews, color: 'text-amber-500', bg: 'bg-amber-50', icon: Calendar }
+              ].map((item, i) => (
+                <div key={i} className="flex items-center justify-between px-2 py-1 hover:bg-slate-50 rounded-lg transition-all">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1 ${item.bg} ${item.color} rounded`}>
+                      <item.icon className="w-3 h-3" />
                     </div>
-                    <span className="font-semibold text-gray-900">{entry.value}%</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{item.label}</span>
                   </div>
-                ))}
-              </div>
+                  <span className="text-base font-black text-gray-900">{item.value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Right Column (1/3) - Sidebar */}
-        <div className="space-y-6">
-
-          {/* Interviews Overview */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Interviews Overview</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
-                    <Calendar className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Upcoming Interviews</span>
-                </div>
-                <span className="text-lg font-bold text-gray-900">{stats.interviewOverview.upcoming}</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                    <CheckCircle className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Completed This Week</span>
-                </div>
-                <span className="text-lg font-bold text-gray-900">{stats.interviewOverview.completed}</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 text-red-600 rounded-lg">
-                    <XCircle className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Cancelled</span>
-                </div>
-                <span className="text-lg font-bold text-gray-900">{stats.interviewOverview.cancelled}</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
-                    <RotateCcw className="w-5 h-5" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Rescheduled</span>
-                </div>
-                <span className="text-lg font-bold text-gray-900">{stats.interviewOverview.rescheduled}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Candidate Activity */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Recent Candidate Activity</h3>
-              <button onClick={() => navigate('/candidates')} className="text-sm text-indigo-600 font-medium hover:text-indigo-700">View All</button>
-            </div>
-            <div className="space-y-4">
-              {recentActivity.length === 0 ? (
-                <p className="text-center text-gray-500 py-4">No recent activity</p>
+        {/* SECOND ROW: Candidate Trends (8) & Jobs by Department (4) */}
+        <div className="lg:col-span-8">
+          <div className="bg-white p-3 rounded-xl border border-blue-50 shadow-sm relative overflow-hidden h-full flex flex-col">
+            <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Candidate Trends</h3>
+            <div className="h-[140px] w-full flex-1">
+              {trends.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trends}>
+                    <defs>
+                      <linearGradient id="colorCandidates" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 'bold' }}
+                      dy={10}
+                    />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#fff', border: '1px solid #f1f5f9', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                      cursor={{ stroke: '#f1f5f9', strokeWidth: 2 }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="candidates"
+                      stroke="#2563eb"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorCandidates)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               ) : (
-                recentActivity.map((candidate, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer" onClick={() => navigate('/candidates')}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${i % 2 === 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700'
-                      }`}>
-                      {candidate.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-gray-900 truncate">{candidate.name}</h4>
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <span>Status: {candidate.status}</span>
-                        <span>•</span>
-                        <span className="truncate">Role: {candidate.role}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${candidate.fitScore >= 70 ? 'bg-green-100 text-green-700' :
-                          candidate.fitScore >= 40 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                        {candidate.fitScore || 0}% Fit
-                      </span>
-                      <p className="text-xs text-gray-400 mt-1">{formatTimeAgo(candidate.updatedAt || candidate.createdAt)}</p>
-                    </div>
-                  </div>
-                ))
+                <div className="h-full flex flex-col items-center justify-center text-gray-300 border-b border-gray-100 border-dashed pb-12">
+                  <div className="w-full border-t border-gray-100 border-dashed mb-16"></div>
+                  <div className="w-full border-t border-gray-100 border-dashed"></div>
+                </div>
               )}
             </div>
           </div>
-
         </div>
+
+        <div className="lg:col-span-4">
+          <div className="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex flex-col items-center h-full">
+            <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest self-start mb-2 px-1">Departments</h3>
+            <div className="relative w-24 h-24 flex items-center justify-center mb-2">
+              <div className="absolute inset-0 rounded-full border-[0.6rem] border-gray-50"></div>
+              <div className="absolute inset-0 rounded-full border-[0.6rem] border-blue-600 border-t-transparent border-r-transparent border-l-transparent rotate-45 opacity-20"></div>
+              <div className="text-center z-10">
+                <span className="text-xl font-black text-gray-900">{jobCount}</span>
+                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest leading-none">Jobs</p>
+              </div>
+            </div>
+            <div className="w-full space-y-1">
+              <div className="flex items-center justify-between text-[9px] font-bold text-gray-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                <span>Engineering</span>
+                <span className="text-gray-900">{jobCount}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM ROW: Recent Candidate Activity (12) - Extends horizontally */}
+        <div className="lg:col-span-12">
+          <div className="bg-white p-3 rounded-xl border border-blue-50 shadow-sm">
+            <div className="flex items-center justify-between mb-2 text-gray-900 px-1">
+              <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Recent Activity</h3>
+              <button
+                onClick={() => navigate('/candidates')}
+                className="px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-[9px] font-black hover:bg-blue-100 transition-all uppercase tracking-widest border border-blue-100"
+              >
+                View All
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+              {recentCandidates.length > 0 ? (
+                recentCandidates.map((cand, i) => (
+                  <div
+                    key={i}
+                    onClick={() => navigate(`/candidates/${cand.id}`)}
+                    className="flex items-center justify-between group p-1 hover:bg-slate-50/50 rounded-lg transition-all cursor-pointer border-b border-slate-50 last:border-0"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-blue-600 font-black text-sm border border-slate-100">
+                        {cand.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 transition-colors truncate leading-tight">{cand.name}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-gray-400 uppercase">{cand.role || 'General'}</span>
+                          <span className="text-[8px] text-gray-300 truncate max-w-[150px]">{cand.email}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border
+                        ${cand.status === 'Hired' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                          cand.status === 'Rejected' ? 'bg-red-50 text-red-600 border-red-100' :
+                            cand.status === 'Interview' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                              'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                        {cand.status || 'Screening'}
+                      </span>
+                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter min-w-[50px] text-right">Just Now</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-20 text-center border-2 border-dashed border-gray-100 rounded-[3rem]">
+                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Users className="w-10 h-10 text-gray-200" />
+                  </div>
+                  <p className="text-lg font-bold text-gray-400">No recent candidate activity to display</p>
+                  <p className="text-sm text-gray-300 mt-2">Activity will appear here as candidates progress through the pipeline.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

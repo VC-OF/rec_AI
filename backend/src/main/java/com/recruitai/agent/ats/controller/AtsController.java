@@ -33,4 +33,13 @@ public class AtsController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PostMapping("/parse-profile")
+    public ResponseEntity<Candidate> parseProfile(@RequestBody java.util.Map<String, String> payload) {
+        String profileText = payload.get("text");
+        String source = payload.getOrDefault("source", "LINKEDIN");
+        
+        Candidate candidate = orchestratorService.parseProfileText(profileText, source);
+        return ResponseEntity.ok(candidate);
+    }
 }

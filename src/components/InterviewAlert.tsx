@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { X, Calendar, Clock, Video, Phone, MapPin, Volume2, VolumeX } from 'lucide-react';
 
 interface Interview {
     id: string;
     candidateName: string;
+    candidateId?: string;
     startTime: string; // ISO string
     type: string;
     notes: string;
@@ -12,6 +14,7 @@ interface Interview {
 }
 
 const InterviewAlert: React.FC = () => {
+    const navigate = useNavigate();
     const [upcomingInterview, setUpcomingInterview] = useState<Interview | null>(null);
     const [soundEnabled, setSoundEnabled] = useState(true);
     const alertedInterviews = useRef<Set<string>>(new Set());
@@ -79,7 +82,7 @@ const InterviewAlert: React.FC = () => {
 
     return (
         <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
-            <div className="bg-white border-l-4 border-indigo-600 rounded-lg shadow-2xl p-4 w-96 flex flex-col gap-3 relative">
+            <div className="bg-white border-l-4 border-indigo-600 border-2 border-blue-200 rounded-lg shadow-2xl p-4 w-96 flex flex-col gap-3 relative">
                 <div className="absolute top-2 right-2 flex items-center gap-1">
                     <button
                         onClick={() => setSoundEnabled(!soundEnabled)}
@@ -106,7 +109,7 @@ const InterviewAlert: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-gray-100">
+                <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-blue-100">
                     <div className="flex items-center gap-2 text-gray-800 font-semibold">
                         <span className="w-2 h-2 rounded-full bg-green-500"></span>
                         {upcomingInterview.candidateName}
@@ -125,7 +128,12 @@ const InterviewAlert: React.FC = () => {
 
                 <div className="flex gap-2 mt-1">
                     <button
-                        onClick={() => setUpcomingInterview(null)}
+                        onClick={() => {
+                            if (upcomingInterview) {
+                                navigate(`/candidates/${upcomingInterview.candidateId || upcomingInterview.id}`);
+                                setUpcomingInterview(null);
+                            }
+                        }}
                         className="flex-1 px-3 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition"
                     >
                         Join / View Details

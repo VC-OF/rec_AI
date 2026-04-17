@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, MapPin, Users, Clock, MoreVertical, Briefcase, X, DollarSign, Calendar, GraduationCap, Building2, Search, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Plus, MapPin, Users, User, Clock, MoreVertical, Briefcase, X, DollarSign, Calendar, GraduationCap, Building2, Search, CheckCircle, XCircle, FileText } from 'lucide-react';
 import api from '../api';
 
 // API base URL - configured in vite.config.ts proxy
@@ -54,6 +54,7 @@ interface JobsProps {
 }
 
 const JobDetailsModal = ({ job: initialJob, onClose }: { job: Job; onClose: () => void }) => {
+  const navigate = useNavigate();
   const [candidates, setCandidates] = useState<any[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,37 +87,33 @@ const JobDetailsModal = ({ job: initialJob, onClose }: { job: Job; onClose: () =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl my-8 flex flex-col max-h-[90vh] border border-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl my-4 flex flex-col max-h-[90vh] border border-blue-50">
 
-        {/* Header Section */}
-        <div className="p-8 border-b border-gray-100 relative">
-          <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="w-5 h-5" />
+        {/* Header Section with Blue Divider */}
+        <div className="p-4 border-b border-blue-50 relative">
+          <button onClick={onClose} className="absolute top-4 right-4 p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+            <X size={14} />
           </button>
 
-          <div className="flex items-start gap-5">
-            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center flex-shrink-0 text-indigo-600 mb-2">
-              <Briefcase className="w-8 h-8" />
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0 text-blue-600">
+              <Briefcase size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{job.title}</h2>
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-gray-400" />
-                  <span className="font-medium text-gray-700">{job.department}</span>
+              <h2 className="text-lg font-black text-gray-900 leading-none mb-1.5">{job.title}</h2>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                <div className="flex items-center gap-1.5">
+                  <Building2 size={12} className="text-blue-300" />
+                  <span>{job.department}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center gap-1.5">
+                  <MapPin size={12} className="text-blue-300" />
                   <span>{job.location}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center gap-1.5">
+                  <Clock size={12} className="text-blue-300" />
                   <span>{job.employmentType}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span>Posted: {job.postedDate?.substring(0, 10) || 'Recently'}</span>
                 </div>
               </div>
             </div>
@@ -124,27 +121,27 @@ const JobDetailsModal = ({ job: initialJob, onClose }: { job: Job; onClose: () =
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100 border-b border-gray-100 bg-gray-50/50">
-          <div className="p-4 flex flex-col items-center justify-center text-center">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Applicants</span>
-            <span className="text-2xl font-bold text-gray-900">{stats.total}</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-blue-50 border-b border-blue-50 bg-slate-50/30">
+          <div className="p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Total</span>
+            <span className="text-base font-black text-gray-900">{stats.total}</span>
           </div>
-          <div className="p-4 flex flex-col items-center justify-center text-center">
-            <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Interviewing</span>
-            <span className="text-2xl font-bold text-blue-700">{stats.interview}</span>
+          <div className="p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-0.5">Interviews</span>
+            <span className="text-base font-black text-blue-700">{stats.interview}</span>
           </div>
-          <div className="p-4 flex flex-col items-center justify-center text-center">
-            <span className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">Offered</span>
-            <span className="text-2xl font-bold text-green-700">{stats.offer}</span>
+          <div className="p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">Offered</span>
+            <span className="text-base font-black text-emerald-700">{stats.offer}</span>
           </div>
-          <div className="p-4 flex flex-col items-center justify-center text-center">
-            <span className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Rejected</span>
-            <span className="text-2xl font-bold text-red-600">{stats.rejected}</span>
+          <div className="p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-0.5">Rejected</span>
+            <span className="text-base font-black text-rose-600">{stats.rejected}</span>
           </div>
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Left Column: Job Details (2/3 width) */}
           <div className="lg:col-span-2 space-y-8">
@@ -240,7 +237,7 @@ const JobDetailsModal = ({ job: initialJob, onClose }: { job: Job; onClose: () =
                 ) : filteredCandidates.length > 0 ? (
                   <div className="divide-y divide-gray-50">
                     {filteredCandidates.map((c, i) => (
-                      <div key={i} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group cursor-pointer" title="View Candidate">
+                      <div key={i} onClick={() => navigate(`/candidates/${c.id}`)} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group cursor-pointer" title="View Candidate">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold ring-2 ring-white shadow-sm">
                             {c.name.charAt(0)}
@@ -250,13 +247,21 @@ const JobDetailsModal = ({ job: initialJob, onClose }: { job: Job; onClose: () =
                             <div className="text-xs text-gray-500">{c.email}</div>
                           </div>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${c.status === 'Offer' ? 'bg-green-50 text-green-700 border-green-100' :
-                          c.status === 'Interview' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                            c.status === 'Rejected' ? 'bg-red-50 text-red-700 border-red-100' :
-                              'bg-gray-100 text-gray-600 border-gray-200'
-                          }`}>
-                          {c.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${c.status === 'Offer' ? 'bg-green-50 text-green-700 border-green-100' :
+                            c.status === 'Interview' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                              c.status === 'Rejected' ? 'bg-red-50 text-red-700 border-red-100' :
+                                'bg-gray-100 text-gray-600 border-gray-200'
+                            }`}>
+                            {c.status}
+                          </span>
+                          {c.assignedBy && (
+                            <div className="flex items-center gap-1 text-[8px] font-black text-blue-500 uppercase tracking-tighter">
+                              <User size={8} />
+                              BY {c.assignedBy.split(' ')[0]}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -273,12 +278,12 @@ const JobDetailsModal = ({ job: initialJob, onClose }: { job: Job; onClose: () =
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-between items-center">
-          <button className="text-sm text-red-500 hover:text-red-700 font-medium">
+        <div className="p-4 border-t border-slate-50 bg-slate-50/50 rounded-b-xl flex justify-between items-center">
+          <button className="text-[10px] font-black text-rose-500 hover:text-rose-600 uppercase tracking-widest transition">
             Delete Requisition
           </button>
-          <button onClick={onClose} className="px-6 py-2 bg-white border border-gray-200 shadow-sm rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all hover:shadow-md">
-            Close Details
+          <button onClick={onClose} className="px-5 py-2 bg-white border border-slate-200 shadow-sm rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-widest hover:bg-slate-50 transition">
+            Close
           </button>
         </div>
       </div>
@@ -527,74 +532,68 @@ const Jobs: React.FC<JobsProps> = ({ searchQuery = '' }) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Job Requisitions</h2>
-          <p className="text-sm text-gray-500">Create and manage your open positions</p>
+    <div className="space-y-4 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-blue-50 shadow-sm transition-all duration-300">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-100/50">
+            <Briefcase size={16} />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+              <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest leading-none">Management</span>
+            </div>
+            <h2 className="text-lg font-black text-gray-900 tracking-tight leading-none">Job Requisitions</h2>
+          </div>
         </div>
         <button
           onClick={() => {
             setEditJobId(null);
             setFormData({
-              title: '',
-              description: '',
-              company: '',
-              department: '',
-              location: '',
-              employmentType: 'Full-time',
-              remote: false,
-              salary: '',
-              experienceLevel: 'Mid Level',
-              skills: [],
-              education: [],
-              industry: '',
-              benefits: [],
-              deadline: '',
-              status: 'Hold',
+              title: '', description: '', company: '', department: '', location: '',
+              employmentType: 'Full-time', remote: false, salary: '',
+              experienceLevel: 'Mid Level', skills: [], education: [], industry: '',
+              benefits: [], deadline: '', status: 'Hold',
             });
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-2 bg-indigo-600 px-4 py-2.5 rounded-lg shadow-sm text-sm font-medium text-white hover:bg-indigo-700 transition"
+          className="flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-lg shadow-md shadow-blue-100/50 text-[11px] font-black text-white hover:bg-blue-700 transition active:scale-95 uppercase tracking-widest leading-none"
         >
-          <Plus className="w-5 h-5" /> Create New Job
+          <Plus size={14} /> Create Job
         </button>
       </div>
 
-      {/* Status Filter Buttons */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setStatusFilter('all')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${statusFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-        >
-          All Jobs
-        </button>
-        <button
-          onClick={() => setStatusFilter('Open')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${statusFilter === 'Open' ? 'bg-green-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-        >
-          Open
-        </button>
-        <button
-          onClick={() => setStatusFilter('Hold')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${statusFilter === 'Hold' ? 'bg-gray-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-        >
-          Hold
-        </button>
+      {/* Filter Section with Premium Blue Border */}
+      <div className="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex items-center gap-3">
+        <div className="flex items-center gap-1.5 p-1 bg-gray-50 rounded-lg">
+          {[
+            { id: 'all', label: 'All', color: 'blue' },
+            { id: 'Open', label: 'Active', color: 'emerald' },
+            { id: 'Hold', label: 'Hold', color: 'amber' }
+          ].map((btn) => (
+            <button
+              key={btn.id}
+              onClick={() => setStatusFilter(btn.id as any)}
+              className={`px-5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all
+                ${statusFilter === btn.id
+                  ? 'bg-white text-blue-600 shadow-sm border border-blue-100'
+                  : 'text-gray-400 hover:text-gray-600'
+                }`}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Fetching Requisitions...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {jobs
             .filter(job => {
-              // Map legacy statuses for filtering
               let normalizedStatus = job.status;
               if (normalizedStatus === 'Active') normalizedStatus = 'Open';
               if (normalizedStatus === 'Draft') normalizedStatus = 'Hold';
@@ -621,38 +620,35 @@ const Jobs: React.FC<JobsProps> = ({ searchQuery = '' }) => {
                 );
               };
 
-              const displayStatus = (job.status === 'Active' ? 'Open' : (job.status === 'Draft' ? 'Hold' : job.status));
-
               return (
                 <div key={job.id} onClick={(e) => {
-                  // Don't trigger if clicked on menu or action buttons
                   if ((e.target as HTMLElement).closest('button')) return;
                   setSelectedJobForDetails(job);
-                }} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 group cursor-pointer relative">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                      <Briefcase className="w-6 h-6" />
+                }} className="bg-white rounded-xl shadow-sm border border-blue-50 p-3 hover:border-blue-200 transition-all group cursor-pointer relative overflow-hidden">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="p-1.5 bg-blue-50 rounded-lg text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      <Briefcase size={14} />
                     </div>
                     <div className="relative">
                       <button
                         onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === job.id ? null : job.id); }}
-                        className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition"
+                        className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition"
                       >
-                        <MoreVertical className="w-5 h-5" />
+                        <MoreVertical size={14} />
                       </button>
 
                       {menuOpenId === job.id && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                        <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10 transition-all">
                           <div className="py-1">
                             <button
                               onClick={(e) => { e.stopPropagation(); handleEditJob(job); }}
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                              className="flex items-center px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-gray-100 w-full text-left"
                             >
                               Edit Job
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDeleteJob(job.id); }}
-                              className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                              className="flex items-center px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 w-full text-left"
                             >
                               Delete Job
                             </button>
@@ -662,71 +658,42 @@ const Jobs: React.FC<JobsProps> = ({ searchQuery = '' }) => {
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">{highlightText(job.title)}</h3>
-                  <p className="text-sm text-gray-500 mb-4">{highlightText(job.department)} • {highlightText(job.id)}</p>
+                  <h3 className="text-[11px] font-black text-gray-900 mb-0.5 leading-tight uppercase">{highlightText(job.title)}</h3>
+                  <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2.5">{highlightText(job.department)}</p>
 
-                  <div className="space-y-2 mb-6">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                  <div className="space-y-1 mb-3">
+                    <div className="flex items-center text-[10px] font-bold text-gray-600">
+                      <MapPin size={11} className="mr-1.5 text-blue-300" />
                       {job.location}
                     </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                    <div className="flex items-center text-[10px] font-bold text-gray-600">
+                      <Clock size={11} className="mr-1.5 text-blue-300" />
                       {job.employmentType}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate('/candidates'); }}
-                      className="flex items-center text-sm font-medium text-gray-900 hover:text-indigo-600 transition cursor-pointer"
-                    >
-                      <Users className="w-4 h-4 mr-2 text-gray-400" />
-                      {job.applicants} Candidates
-                    </button>
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        try {
-                          const currentIsOpen = job.status === 'Active' || job.status === 'Open';
-                          const newStatus = currentIsOpen ? 'Hold' : 'Open';
-
-                          // Optimistic update
-                          setJobs(prev => prev.map(j =>
-                            j.id === job.id
-                              ? { ...j, status: newStatus }
-                              : j
-                          ));
-                          // API call
-                          await api.put(`${API_URL}/${job.id}`, { ...job, status: newStatus });
-                        } catch (error) {
-                          console.error('Error updating status:', error);
-                          fetchJobs();
-                        }
-                      }}
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition ${['Active', 'Open'].includes(job.status) ? 'bg-green-100 text-green-800 hover:bg-green-200' :
-                        ['Draft', 'Hold'].includes(job.status) ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' : 'bg-red-100 text-red-800'
-                        }`}
-                    >
-                      {displayStatus}
-                    </button>
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex items-center text-[10px] font-black text-gray-900">
+                      <Users size={11} className="mr-1.5 text-blue-300" />
+                      {job.applicants} Applicants
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${['Active', 'Open'].includes(job.status) ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                      {job.status === 'Active' ? 'Open' : (job.status === 'Draft' ? 'Hold' : job.status)}
+                    </span>
                   </div>
 
-                  <div className="mt-4 flex gap-2">
+                  <div className="mt-3 flex gap-2 pt-3 border-t border-slate-50">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedJobForDetails(job);
-                      }}
-                      className="flex-1 bg-white border border-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
+                      onClick={(e) => { e.stopPropagation(); setSelectedJobForDetails(job); }}
+                      className="flex-1 bg-white border border-slate-200 text-slate-500 py-1.5 rounded-lg text-[9px] font-black hover:bg-slate-50 transition uppercase tracking-widest"
                     >
-                      View Details
+                      Details
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); navigate('/candidates'); }}
-                      className="flex-1 bg-indigo-50 text-indigo-700 py-2 rounded-lg text-sm font-medium hover:bg-indigo-100 transition"
+                      className="flex-1 bg-blue-600 text-white py-1.5 rounded-lg text-[9px] font-black hover:bg-blue-700 transition uppercase tracking-widest shadow-md shadow-blue-100"
                     >
-                      Find Candidates
+                      Sourcing
                     </button>
                   </div>
                 </div>
@@ -744,23 +711,20 @@ const Jobs: React.FC<JobsProps> = ({ searchQuery = '' }) => {
 
       {/* Create Job Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-gray-900">{editJobId ? 'Edit Job' : 'Create New Job'}</h3>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 transition"
-              >
-                <X className="w-6 h-6" />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-blue-50">
+            <div className="sticky top-0 bg-white border-b border-blue-50 px-5 py-4 flex items-center justify-between z-20">
+              <h3 className="text-lg font-black text-gray-900 leading-none uppercase tracking-tight">{editJobId ? 'Edit Job' : 'Create Job'}</h3>
+              <button onClick={handleCloseModal} className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 transition">
+                <X size={14} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="p-5 space-y-5">
               {/* Basic Information */}
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-indigo-600" />
+                <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <Briefcase size={14} />
                   Basic Information
                 </h4>
 

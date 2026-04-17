@@ -80,10 +80,10 @@ public class ResumeService implements org.springframework.beans.factory.Initiali
     }
 
     public Candidate uploadAndParseResume(MultipartFile file, String source) throws IOException {
-        return uploadAndParseResume(file, source, null);
+        return uploadAndParseResume(file, source, null, null);
     }
 
-    public Candidate uploadAndParseResume(MultipartFile file, String source, String jobId) throws IOException {
+    public Candidate uploadAndParseResume(MultipartFile file, String source, String jobId, String assignedBy) throws IOException {
 
         Resume resume = new Resume();
         resume.setId("RES-" + UUID.randomUUID().toString().substring(0, 8));
@@ -121,6 +121,18 @@ public class ResumeService implements org.springframework.beans.factory.Initiali
         // VALIDATION: Fail early if no data
         if (parsed.getName() == null && parsed.getEmail() == null) {
             throw new RuntimeException("Validation Failed: Could not extract Name or Email from resume.");
+        }
+
+        // DUPLICATE CHECK: Fail if candidate with this email already exists
+        if (parsed.getEmail() != null) {
+            java.util.Optional<Candidate> existing = candidateRepository.findByEmail(parsed.getEmail());
+            // If checking globally, use findByEmail. If checking per job, logic differs.
+            // Requirement: "if i upload ... same existed user ... throw message that
+            // candidate is already existed"
+            // We assume global uniqueness for this error.
+            if (existing.isPresent()) {
+                throw new RuntimeException("Candidate already exists with email: " + parsed.getEmail());
+            }
         }
 
         // 3. JOB MATCHING & ROLE ASSIGNMENT (Determined before creating/loading
@@ -211,12 +223,25 @@ public class ResumeService implements org.springframework.beans.factory.Initiali
         candidate.setSource(source);
         candidate.setResumeId(resume.getId());
         candidate.setUpdatedAt(LocalDateTime.now());
+        candidate.setVisaType(parsed.getVisaType());
+        candidate.setVisaValidity(parsed.getVisaValidity());
+        candidate.setReasonForChange(parsed.getReasonForChange());
+        candidate.setRecentlyAppliedCompanies(parsed.getRecentlyAppliedCompanies());
+        candidate.setSummary(parsed.getSummary());
+
+        if (assignedBy != null && !assignedBy.trim().isEmpty()) {
+            candidate.setAssignedBy(assignedBy);
+            candidate.setUploadedBy(assignedBy);
+        }
 
         // Copy match results from tempMatch
         candidate.setJobId(tempMatch.getJobId());
         candidate.setRole(tempMatch.getRole());
         candidate.setFitScore(tempMatch.getFitScore());
         candidate.setMatchReason(tempMatch.getMatchReason());
+        if (tempMatch.getJobId() != null) {
+            candidate.setJobAssignedBy("AI");
+        }
         candidate.setShortlisted(candidate.getFitScore() >= 70);
 
         if (parsed.getConfidenceScore() != null) {
@@ -244,6 +269,30 @@ public class ResumeService implements org.springframework.beans.factory.Initiali
 
     public Resume getResumeById(String id) {
         return resumeRepository.findById(id).orElse(null);
+    }
+
+    public String generateFormattedCv(String resumeId) {
+        Resume resume = getResumeById(resumeId);
+        if (resume == null)
+            return "Resume not found.";
+
+        Candidate candidate = candidateRepository.findAll().stream()
+                .filter(c -> resumeId.equals(c.getResumeId()))
+                .findFirst().orElse(null);
+
+        String candidateName = (candidate != null) ? candidate.getName() : "Candidate";
+        String extractedText = "";
+        try {
+            extractedText = new Tika().parseToString(new ByteArrayInputStream(resume.getData()));
+        } catch (Exception e) {
+            logger.warn("Could not extract text for CV formatting, using multimodal fallback.");
+        }
+
+        return geminiAgentService.generateFormattedCv(
+                candidateName,
+                extractedText,
+                resume.getData(),
+                resume.getContentType());
     }
 
     private boolean isPoisoned(String text) {

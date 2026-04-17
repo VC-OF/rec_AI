@@ -14,6 +14,9 @@ import ShortlistReport from './pages/ShortlistReport';
 import InterviewPipeline from './pages/InterviewPipeline';
 import Settings from './pages/Settings';
 import Unauthorized from './pages/Unauthorized';
+import LinkedInAgent from './pages/LinkedInAgent';
+import CandidateDetails from './pages/CandidateDetails';
+import Inbox from './pages/Inbox';
 
 const App: React.FC = () => {
   return (
@@ -30,11 +33,14 @@ const App: React.FC = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="jobs" element={<JobManagement />} />
           <Route path="candidates" element={<Candidates />} />
+          <Route path="candidates/:id" element={<CandidateDetails />} />
           <Route path="resume-upload" element={<ResumeUpload />} />
           <Route path="skills-matrix" element={<SkillsMatrix />} />
           <Route path="shortlist-report" element={<ShortlistReport />} />
           <Route path="interview-pipeline" element={<InterviewPipeline />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="inbox" element={<Inbox />} />
+          <Route path="linkedin-agent" element={<LinkedInAgent />} />
         </Route>
 
         {/* Fallback */}

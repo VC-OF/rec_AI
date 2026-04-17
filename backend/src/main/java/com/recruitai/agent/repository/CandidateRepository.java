@@ -14,6 +14,9 @@ import java.util.Optional;
 @Repository
 public interface CandidateRepository extends MongoRepository<Candidate, String> {
 
+    Optional<Candidate> findTopByOrderBySequenceIdDesc();
+    List<Candidate> findBySequenceIdIsNull();
+
     Optional<Candidate> findByEmail(String email);
 
     List<Candidate> findAllByEmail(String email);
@@ -29,6 +32,7 @@ public interface CandidateRepository extends MongoRepository<Candidate, String> 
     Page<Candidate> findByStatus(String status, Pageable pageable);
 
     @Query("{ '$or': [ " +
+            "{ 'id': { '$regex': ?0, '$options': 'i' } }, " +
             "{ 'name': { '$regex': ?0, '$options': 'i' } }, " +
             "{ 'email': { '$regex': ?0, '$options': 'i' } }, " +
             "{ 'role': { '$regex': ?0, '$options': 'i' } }, " +

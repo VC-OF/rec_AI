@@ -44,6 +44,19 @@ public class ParsedResume {
     @JsonProperty("confidence_score")
     private String confidenceScore;
 
+    @JsonProperty("visa_type")
+    private String visaType;
+
+    @JsonProperty("visa_validity")
+    private String visaValidity;
+
+    @JsonProperty("reason_for_change")
+    private String reasonForChange;
+
+    @JsonProperty("recently_applied_companies")
+    private String recentlyAppliedCompanies;
+
+    @JsonProperty("summary")
     private String summary;
     private Map<String, Object> metadata;
 
@@ -169,6 +182,38 @@ public class ParsedResume {
 
     public void setConfidenceScore(String confidenceScore) {
         this.confidenceScore = confidenceScore;
+    }
+
+    public String getVisaType() {
+        return visaType;
+    }
+
+    public void setVisaType(String visaType) {
+        this.visaType = visaType;
+    }
+
+    public String getVisaValidity() {
+        return visaValidity;
+    }
+
+    public void setVisaValidity(String visaValidity) {
+        this.visaValidity = visaValidity;
+    }
+
+    public String getReasonForChange() {
+        return reasonForChange;
+    }
+
+    public void setReasonForChange(String reasonForChange) {
+        this.reasonForChange = reasonForChange;
+    }
+
+    public String getRecentlyAppliedCompanies() {
+        return recentlyAppliedCompanies;
+    }
+
+    public void setRecentlyAppliedCompanies(String recentlyAppliedCompanies) {
+        this.recentlyAppliedCompanies = recentlyAppliedCompanies;
     }
 
     public com.recruitai.agent.entity.AuditLog getAuditLog() {

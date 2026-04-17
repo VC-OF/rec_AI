@@ -7,19 +7,13 @@ import com.recruitai.agent.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 @Service
-@EnableScheduling
 public class DataBackupService {
 
     private static final Logger logger = LoggerFactory.getLogger(DataBackupService.class);
@@ -49,16 +43,22 @@ public class DataBackupService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @EventListener(ApplicationReadyEvent.class) // Ensures DB is ready
-    public void init() {
-        logger.info("DataBackupService initialized. Checking for existing data...");
+    @jakarta.annotation.PostConstruct
+    public void startupRestore() {
+        logger.info("DataBackupService initialized. Performing startup restore...");
         restoreData();
     }
 
+    @jakarta.annotation.PreDestroy
+    public void shutdownBackup() {
+        logger.info("Application shutting down. Performing final data backup...");
+        backupData();
+    }
+
     /**
-     * Periodically backup data every 10 minutes
+     * Periodically backup data every 2 minutes for increased persistence
      */
-    @Scheduled(fixedRate = 600000)
+    @Scheduled(fixedRate = 120000)
     public void backupData() {
         logger.info("Starting scheduled data backup...");
 
@@ -80,7 +80,7 @@ public class DataBackupService {
 
     private void backupEntity(String entityName, List<?> data) {
         try {
-            if (data.isEmpty())
+            if (data == null || data.isEmpty())
                 return;
             File file = new File(DATA_DIR, entityName + "_dump.json");
             objectMapper.writeValue(file, data);
@@ -97,7 +97,8 @@ public class DataBackupService {
             return;
         }
 
-        // Only restore if repositories are empty to prevent overwriting new data
+        logger.info("Checking repositories for existing data before restore...");
+
         if (candidateRepository.count() == 0) {
             restoreEntity("candidates", new TypeReference<List<Candidate>>() {
             }, candidateRepository);
@@ -108,7 +109,9 @@ public class DataBackupService {
             }, jobRepository);
         }
 
-        if (resumeRepository.count() == 0) {
+        if (resumeRepository.count() == 0)
+
+        {
             restoreEntity("resumes", new TypeReference<List<Resume>>() {
             }, resumeRepository);
         }
@@ -139,15 +142,27 @@ public class DataBackupService {
         File file = new File(DATA_DIR, entityName + "_dump.json");
         if (file.exists()) {
             try {
-                logger.info("Restoring {} from absolute path: {}", entityName, file.getAbsolutePath());
-                List<T> data = objectMapper.readValue(file, typeRef);
-                if (!data.isEmpty()) {
-                    logger.info("Found {} records for {}. Saving to repository...", data.size(), entityName);
+                logger.info("Restoring {} from path: {}", entityName, file.getAbsolutePath());
+                String content = new String(java.nio.file.Files.readAllBytes(file.toPath()),
+                        java.nio.charset.StandardCharsets.UTF_8);
+
+                if (content.trim().isEmpty())
+                    return;
+
+                // AUTOMATIC REPAIR LOGIC: Clean corrupted date formats before parsing
+                // Fixes issues like 2026-02-13T09:28:32.320.32.3 -> 2026-02-13T09:28:32.320
+                String repairedContent = content.replaceAll(
+                        "(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?)(?:(?:\\.\\d+)+|Z|[+-]\\d{2}:?\\d{2})",
+                        "$1");
+
+                List<T> data = objectMapper.readValue(repairedContent, typeRef);
+                if (data != null && !data.isEmpty()) {
+                    logger.info("Found {} records for {}. Saving to MongoDB...", data.size(), entityName);
                     repository.saveAll(data);
-                    logger.info("Restored {} {} records from backup.", data.size(), entityName);
+                    logger.info("Successfully restored {} {} records.", data.size(), entityName);
                 }
-            } catch (IOException e) {
-                logger.error("Failed to restore {}: {}", entityName, e.getMessage());
+            } catch (Exception e) {
+                logger.error("CRITICAL: Failed to restore {}: {}", entityName, e.getMessage());
             }
         }
     }
